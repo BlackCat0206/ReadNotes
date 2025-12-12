@@ -99,33 +99,35 @@ void Sort_Swap(int* left, int* right)
 int _QuickSortHoare(int arr[], int left, int right)
 {
     // 确认基值位置，left指针左移
-    int base = left++;
-
-    while(left <= right)
+    int base = left;
+    int l = left - 1;
+    int r = right + 1;
+    while (l < r)
     {
-        // 右指针向左走，寻找比基值小的元素
-        while (left <= right && arr[base] < arr[right])
+        // 指针向左走，寻找基准值大的值
+        do
         {
-            --right;
+            l++;
         }
+        while(arr[l] < arr[base]);
 
-        // 左指针向右走，寻找比基值大的元素
-        while (left <= right && arr[base] > arr[left])
+        // 指针向右走，寻找基准值小的值
+        do
         {
-            ++left;
+            r--;
         }
+        while(arr[r] > arr[base]);
 
-        // 左指针找到比基值大的元素，右指针找到比基值小的元素，交换。
-        if (left <= right)
+        if (l < r)
         {
-            Sort_Swap(&arr[left], &arr[right]);
-            ++left;
-            --right;
+            // 交换两个指针位置元素
+            Sort_Swap(&arr[l], &arr[r]);
         }
     }
+
     // 交换基值与右指针位置元素
-    Sort_Swap(&arr[base], &arr[right]);
-    return right;
+    Sort_Swap(&arr[base], &arr[r]);
+    return r;
 }
 
 /**
@@ -245,3 +247,8 @@ void Quick_Sort(int arr[], int left, int right)
 ## 四、源码
 
 [04_QuickSort.c](./SourceCode/04_QuickSort.c)
+
+## 五、拓展
+
+* `Hoare`现有的逻辑对于处理数组中有重复元素时，会有异常。可以使用Hoare三排指针排序。
+* [215_数组中的第K个最大元素.md](../Array/215_数组中的第K个最大元素.md)

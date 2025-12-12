@@ -131,3 +131,8 @@ void MergeSort(int arr[], int size)
 ## 四、源码
 
 [05_MergeSort.c](./SourceCode/05_MergeSort.c)
+
+## 五、相关题目
+
+[00X_数组中的逆序对](../Array/00X_数组中的逆序对.md)
+

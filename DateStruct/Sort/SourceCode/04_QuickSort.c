@@ -10,9 +10,9 @@
 
 #include <stdio.h>
 
-#define HOARE_QUICK_SORT 0
+#define HOARE_QUICK_SORT 1
 #define HOLE_QUICK_SORT 0
-#define LOMOTO_QUICK_SORT 1
+#define LOMOTO_QUICK_SORT 0
 
 void Sort_Swap(int* left, int* right)
 {
@@ -23,43 +23,49 @@ void Sort_Swap(int* left, int* right)
 }
 
 /**
- * @brief hoare排序法
+ * @brief hoare排序法三路排序，处理重复元素
  * @param [in] arr 数组
  * @param [in] left 左边界索引
  * @param [in] right 右边界索引
- * @return int mid 本次基值存放的位置
- * @attention: 在执行操作时，判断left <= right！！！
+ * @return void
  */
-int _QuickSortHoare(int arr[], int left, int right)
+void _QuickSortHoare3(int arr[], int left, int right)
 {
-    // 确认基值位置，left指针左移
-    int base = left++;
-
-    while(left <= right)
+    if (left >= right)
     {
-        // 右指针向左走，寻找比基值小的元素
-        while (left <= right && arr[base] < arr[right])
-        {
-            --right;
-        }
+        return;
+    }
 
-        // 左指针向右走，寻找比基值大的元素
-        while (left <= right && arr[base] > arr[left])
-        {
-            ++left;
-        }
+    // 选择基准值,防止有序数组，选择中间值
+    int index = left + (right - left) / 2;
+    int baseValue = arr[index];
 
-        // 左指针找到比基值大的元素，右指针找到比基值小的元素，交换。
-        if (left <= right)
+    int l = left;
+    int r = right;
+    int i = left;   // 当前遍历指针
+    while (i <= r)
+    {
+        if (arr[i] > baseValue)
         {
-            Sort_Swap(&arr[left], &arr[right]);
-            ++left;
-            --right;
+            Sort_Swap(&arr[i], &arr[l]);
+            l++;
+            i++;
+        }
+        else if (arr[i] < baseValue)
+        {
+            Sort_Swap(&arr[i], &arr[r]);
+            r--;
+        }
+        else
+        {
+            i++;
         }
     }
-    // 交换基值与右指针位置元素
-    Sort_Swap(&arr[base], &arr[right]);
-    return right;
+
+    
+    _QuickSortHoare3(arr, left, l - 1);
+    _QuickSortHoare3(arr, r + 1, right);
+    return;
 }
 
 /**
@@ -154,15 +160,23 @@ void Quick_Sort(int arr[], int left, int right)
     // 各类快排执行
     int mid = 0;
 
-#ifdef HOARE_QUICK_SORT
-    mid = _QuickSortHoare(arr, left, right);
+#if HOARE_QUICK_SORT
+    // mid = _QuickSortHoare(arr, left, right);
+    printf("index=%d\n", mid);
+    int size = right - left + 1;
+    printf("Sorted array is:\n");
+    for (int i = 0; i < size; i++)
+    {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
 #endif
 
-#ifdef HOLE_QUICK_SORT
+#if HOLE_QUICK_SORT
     mid = _QuickSortHole(arr, left, right);
 #endif
 
-#ifdef LOMOTO_QUICK_SORT
+#if LOMOTO_QUICK_SORT
     mid = _QuickSortLomoto(arr, left, right);
 #endif
 
@@ -177,10 +191,11 @@ void Quick_Sort(int arr[], int left, int right)
  */
 int main(int argc, char* argv[])
 {
-    int arr[] = {64, 34, 25, 12, 22, 11, 90};
+    int arr[] = {3,2,1,5,6,4};
     int size = sizeof(arr) / sizeof(arr[0]);
     
-    Quick_Sort(arr, 0, size - 1);
+    // Quick_Sort(arr, 0, size - 1);
+    _QuickSortHoare3(arr, 0, size - 1);
     
     printf("排序后的数组：\n");
     for (int i = 0; i < size; i++)
