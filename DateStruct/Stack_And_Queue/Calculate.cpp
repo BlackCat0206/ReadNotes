@@ -261,6 +261,9 @@ vector<int> calculateInfix(const string& s, size_t begin)
 int main()
 {
     string infix = "3+(2*2)-1";
+
+    cout << " string.size(): " << infix.size() << endl;
+
     vector<int> res = calculateInfix(infix, 0);
     cout << "Calculated Result: " << res[0] << endl;
     string postfix = infixToPostfix(infix);
