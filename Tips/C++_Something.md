@@ -20,7 +20,7 @@
 
 | 分类             | 指针                                     | 引用                                                         |
 | ---------------- | ---------------------------------------- | ------------------------------------------------------------ |
-| 数据类型         | 变量                                     | 对象的别人                                                   |
+| 数据类型         | 变量                                     | 对象的别名                                                   |
 | 存储空间         | 有独立的存储空间，用来存放地址           | 与对象共享存储空间                                           |
 | 初始化           | 声明后可以不用初始化，可以为`nullptr`    | 必须要初始化                                                 |
 | 是否可以重新赋值 | 可以修改其所指对象                       | 引用一旦绑定就不能绑定其他对象                               |
@@ -55,7 +55,7 @@
   ```
 
 * `const`与引用：底层`const`，不能通过引用修改其所绑定对象。
-* `const`与成员函数：表示该函数不会修改为对象的任何非静态的成员变量。
+* `const`与成员函数：表示该函数不会修改对象的任何非静态的成员变量。
 * 常量对象：表示类所实现的对象是常量，其成员变量不能修改。
 * 常量引用传参：表示函数不会修改引用所绑定的对象。
 * 指向常量的指针传参：表示函数不会通过指针修改其所指向的内容。
@@ -71,11 +71,11 @@
 * 静态函数：
   * 在类内使用`static`修饰的函数是静态函数。
   * 静态函数属于类，但不属于类的实例，可以通过类名直接调用，而无序创建对象。
-  * 静态函数不能访问类中非静态的成员变量或非静态的成员函数。
+  * 静态函数不能访问类中非静态的成员变量/函数。
 * 静态成员变量：
   * 在类内使用`static`修饰的成员变量就是静态成员变量。
   * 所有类的对象共享一个静态成员变量的副本。
-  * 在类内生命，在类外初始换。
+  * 在类内声明，在类外初始换。
 * 静态局部变量：
   * 生命周期：程序运行开始到程序结束。
   * 作用域：在声明它所在的函数或者代码段中。
@@ -120,11 +120,11 @@
 | ----------------------- | ------------------------------------------------------------ | ------------------------------------ |
 | 本质                    | 运算符                                                       | 标准库函数                           |
 | 调用失败                | 返回`bad_alloc`                                              | 返回`NULL`                           |
-| 分配空间                | 不需要传入所需分配空间的大小                                 | 需要手动计算并传入所需分配的空间大小 |
 | 类型安全                | 安全，不需要转换                                             | 不安全，需要强制转换                 |
-| 重载                    | operator new/operator delete 可以被重载                      | 不可以                               |
 | 构造函数/析构函数的调用 | new/delete会分别调用对象的构造和析构函数，实现对象的构成和析构 | 不会调用                             |
+| 分配空间大小            | 不需要传入所需分配空间的大小                                 | 需要手动计算并传入所需分配的空间大小 |
 | 分配空间                | 自由存储区                                                   | 堆区                                 |
+| 重载                    | operator new/operator delete 可以被重载                      | 不可以                               |
 | 关系                    | new封装了`malloc`                                            |                                      |
 
 ### `const`和`constexper`
@@ -234,6 +234,26 @@ const self opeator(int)
 * **函数指针数组**：可以使用函数指针数组实现状态机的逻辑，在不同状态下调用不同的函数。
 * **函数指针作为参数**：将函数地址传递给其他函数，实现一种函数可插拔的行为。
 * **多态的实现**：C++中虚函数与函数指针结合使用，可以实现类似于多态的一种效果。
+
+```c
+// 创建圆：绑定“圆的面积函数”到函数指针
+Shape* create_circle(double radius) {
+    Shape* s = (Shape*)malloc(sizeof(Shape));
+    s->calc_area = circle_area;  // 函数指针指向圆的实现
+    s->data.circle.radius = radius;
+    return s;
+}
+
+// 创建矩形：绑定“矩形的面积函数”到函数指针
+Shape* create_rectangle(double w, double h) {
+    Shape* s = (Shape*)malloc(sizeof(Shape));
+    s->calc_area = rectangle_area;  // 函数指针指向矩形的实现
+    s->data.rectangle.w = w;
+    s->data.rectangle.h = h;
+    return s;
+}
+```
+
 * **函数映射表**：更具某些特定的条件调用不同的函数，可以使用函数指针组成函数映射表。
 * **加载动态库**：可以用于在运行时动态加载库中的函数，实现动态链接库的作用
 
@@ -260,7 +280,7 @@ const self opeator(int)
 | 转换类型                         | 语法格式                             | 核心特点                                                     | 适用场景                                                     | 安全性 / 注意事项                                            |
 | -------------------------------- | ------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | 隐式转换（自动）                 | `type2 var = type1_val;`             | 编译器自动完成，无需显式声明；仅支持 “低风险” 转换（如小类型转大类型）。 | 1. 算术类型兼容转换（如 `char→int`、`int→double`）；2. 派生类指针 / 引用转基类；3. 非 `explicit` 构造函数的类型转换。 | 1. 基本类型提升（如 `int→long`）安全；2. 大类型转小类型（如 `double→int`）会截断；3. 空指针转任意指针类型安全。 |
-| 静态转换（static_cast）          | `static_cast<目标类型>(源对象)`      | 编译期检查，支持隐式转换的反向操作（需保证逻辑合法）；不检查类型继承关系的安全性。 | 1. 基本类型的显式转换（如 `double→int`）；<br />2. 类层次中基类 / 派生类指针 / 引用的转换（无运行时检查）；<br />3. 非 `const` 转 `const`（反向不行）；<br />4. 空指针 /void 指针与具体类型指针互转。 | 1. 派生类转基类安全；2. 基类转派生类（无多态）可能不安全（无运行时类型校验）；<br />3. 不支持无关类型（如 `int→char*`）转换。 |
+| 静态转换（static_cast）          | `static_cast<目标类型>(源对象)`      | **编译期**检查，支持隐式转换的反向操作（需保证逻辑合法）；不检查类型继承关系的安全性。 | 1. 基本类型的显式转换（如 `double→int`）；<br />2. 类层次中基类 / 派生类指针 / 引用的转换（无运行时检查）；<br />3. 非 `const` 转 `const`（反向不行）；<br />4. 空指针 /void 指针与具体类型指针互转。 | 1. 派生类转基类安全；2. 基类转派生类（无多态）可能不安全（无运行时类型校验）；<br />3. 不支持无关类型（如 `int→char*`）转换。 |
 | 动态转换（dynamic_cast）         | `dynamic_cast<目标类型>(源对象)`     | **运行时**检查，仅支持多态类型（含虚函数的类）的转换；<br />失败时**返回空指针（指针转换）或抛异常（引用转换）**。 | 1. 类层次中安全的向下转换（基类指针 / 引用转派生类）；<br />2. 交叉转换（同一基类的不同派生类之间）。 | 1. 仅适用于多态类；<br />2. 指针转换失败返回 `nullptr`，引用转换失败抛 `std::bad_cast`；3. 运行时开销略大。 |
 | 常量转换（const_cast）           | `const_cast<目标类型>(源对象)`       | 仅用于添加 / 移除 `const`/`volatile` 属性；不改变对象的其他类型。 | 1. 移除**指针 / 引用**的 `const` 限定（需确保对象实际非 `const`，否则修改未定义）；<br />2. 给非 `const` 对象添加 `const`。 | 1. 仅作用于指针 / 引用 / 成员指针；<br />2. 移除 `const` 后修改原本 `const` 对象会导致未定义行为；<br />3. 不支持基本类型的 `const` 转换（如 `const int→int`）。 |
 | 重新解释转换（reinterpret_cast） | `reinterpret_cast<目标类型>(源对象)` | 编译期转换，直接重新解释二进制位；不做类型检查，最 “暴力” 的转换。 | 1. 无关类型指针 / 引用互转（如 `int*→char*`）；<br />2. 指针与整数类型互转（如 `int*→uintptr_t`）；3. 函数指针与普通指针互转。 | 1. 高度危险，仅适用于底层编程；<br />2. 转换结果依赖平台（二进制布局），可移植性差；<br />3. 不保证转换后对象可合法访问。 |
@@ -400,10 +420,10 @@ const self opeator(int)
 
 | 类别     | `push_back()`                                                | `emplace_back()`                                             |
 | -------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| 参数     | 值、对象、对象的引用、右值                                   | 不接受直接参数，接受构造新元素的参数列表                     |
+| 参数     | 值、对象、对象的引用、右值                                   | 不接受直接参数，接受**构造新元素的参数列表**                 |
 | 参数添加 | 左值：使用拷贝构造函数一个副本，添加到向量尾部。<br />右值：使用移动构造函数移动它 | 直接使用参数列表在向量的尾部构造新元素                       |
-| 扩容     | 可能会引发扩容，新添加的元素在内存中                         | 不会引发扩容，出发向量的容量已到达它的上限                   |
-| 小结     | `emplace_back`相较于`push_back()`省去了临时对象构建和销毁的开销。 | `emplace_back`完美转发，既参数的类别（左值、右值）会被很好的记录下来。 |
+| 扩容     | 可能会引发扩容，将元素添加至新内存中                         | 不会引发扩容，出发向量的容量已到达它的上限                   |
+| 小结     | `emplace_back`相较于`push_back()`省去了**临时对象构建和销毁的开销**。 | `emplace_back`完美转发，既参数的类别（左值、右值）会被很好的记录下来。 |
 
 ```cpp
 #include <vector>
@@ -465,7 +485,7 @@ int main() {
 
 ### 如何在map和set中查找元素？ （考点：元素查找）
 
-* `find()`：找到返回指向传入值的元素的迭代器，若未找到，返回`end()`。
+* `find()`：返回找到指向传入值的元素的迭代器，若未找到，返回`end()`。
 * `count()`：返回查找值的数量，`set`和`map`中元素是唯一的，返回0（未找到）或1（找到）
 * `lower_bound()`：返回一个指向**不小于**给定键的**首个元素的迭代器。**
 * `upper_bound()`：返回一个指向**大于**给定键的**首个元素的迭代器**。
@@ -608,7 +628,7 @@ if (range.first != range.second) {
 ### 迭代器在`STL`中扮演什么角色？
 
 * 统一的方式遍历不同的容器中的元素，无序了解容器的内部结构。
-* 可以被视为指向容器中某个特定位置的直至，允许程序**访问**和**操作**程序中的元素。
+* 可以被视为指向容器中某个特定位置，允许程序**访问**和**操作**程序中的元素。
 
 ### 什么是迭代器失效，如何避免？
 
@@ -675,7 +695,7 @@ for (auto it = lst.begin(); it != lst.end(); ) {
 }
 ```
 
-#### 三、如何避免迭代器失效
+#### 3.如何避免迭代器失效
 
 * **使用返回值继续遍历：**`erase`返回下一个有效迭代器。
 * **提取容量规划（连续存储）**：在大量插入下`reserve`，减少扩容。
@@ -725,7 +745,7 @@ for (auto it = lst.begin(); it != lst.end(); ) {
 * 加倍扩容：
   * 每次扩容的时候原`capacity()`翻倍，比如`capacity=100`扩容一次变为`200`,再扩容一次变为`400`
   * 优点：翻倍扩容的方式使得正常情况下添加元素需要扩容的次数极大减少，时间复杂度低。
-  * 缺点：每次扩容空间翻倍，但很多空间时未使用的，空间利用率不容固定扩容。
+  * 缺点：每次扩容空间翻倍，但很多空间时未使用的，空间利用率不如固定扩容。
 * 实际应用中，一般采用空间换时间的策略。
 
 **4.`resize()`和`reserve()`**
@@ -976,7 +996,7 @@ list的每个元素都放在一块内存中，但它们是不连续的，通过�
 
 1. **map 数组的本质**：
 
-   map 是 `T**` 类型（`int**`），数组里的每个元素（map [0]/map [1]/map [2]）是 `T*` 类型（`int*`），存储的是各个 buffer 的起始地址（比如 map [1] = 0x2000，即 buffer1 的地址）。
+   map 是 `T**` 类型（`int**`），数组里的每个元素（map [0]/map [1]/map [2]）是 `T*` 类型（`int*`），存储的是**各个 buffer 的起始地址**（比如 map [1] = 0x2000，即 buffer1 的地址）。
 
 2. **node 的指向逻辑（核心）**：
 
@@ -1002,8 +1022,8 @@ list的每个元素都放在一块内存中，但它们是不连续的，通过�
 | -------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | 本质     | 堆，STL算法                                                  | 优先队列，容器适配器                                         |
 | 大顶堆   | 基于`<`比较，实现**大顶堆**(完全二叉树，根节点是最大值)      | 底层依赖`heap`，默认也是大顶堆                               |
-| 单独问题 | 与`priority_queue`的关系？：heap时一组算法`make_heap`、`push_heap`、`pop_heap`、`sort_heap`作用于可随机访问容器的`vector/deque`的；<br />`priority_queue`时容器适配器，底层封装了`heap`算法+底层容器（默认`vector`），提供了更易用的队列接口（`push/pop/top`） | 是否可以更换底层容器？：可以，但要支持随机访问。             |
-| 实现细节 | `push_heap`和`pop_heap`的过程？时间复杂度是多少？<br />插入：先把元素放在末尾，然后进行调整-与其父节点向比较，若更大则交换，直到满足堆性质，时间复杂度O(logn);<br />删除：先交换堆顶和最后一个元素，再删除末尾元素，再从对顶向下调整-比较当前节点与左右孩子，交换更大，直到满足堆性质，时间复杂度：O(logn)。 | `priority_queue`的为什么没有`iterator`?<br />其设计目标是保证堆顶可快速访问/删除，若开发迭代器，用户可能通过迭代器修改元素，破坏了堆结构。<br />`priority_queue`应用场景：**TopK问题**（前K大、小元素），堆排序，任务调度。 |
+| 单独问题 | 与`priority_queue`的关系？：<br />heap时一组算法`make_heap`、`push_heap`、`pop_heap`、`sort_heap`作用于可随机访问容器的`vector/deque`的；<br />`priority_queue`时容器适配器，底层封装了`heap`算法+底层容器（默认`vector`），提供了更易用的队列接口（`push/pop/top`） | 是否可以更换底层容器？：可以，但要支持随机访问。             |
+| 实现细节 | `push_heap`和`pop_heap`的过程？时间复杂度是多少？<br />插入：先把元素放在末尾，然后进行调整-与其父节点向比较，若更大则交换，直到满足堆性质，时间复杂度O(logn);<br />删除：**先交换堆顶和最后一个元素**，再删除末尾元素，再从对顶向下调整-比较当前节点与左右孩子，交换更大，直到满足堆性质，时间复杂度：O(logn)。 | `priority_queue`的为什么没有`iterator`?<br />其设计目标是保证**堆顶可快速访问/删除**，若开发迭代器，用户可能通过迭代器修改元素，破坏了堆结构。<br />`priority_queue`应用场景：**TopK问题**（前K大、小元素），堆排序，任务调度。 |
 
 * TopK 问题用`priority_queue`怎么实现？为什么选小顶堆而非大顶堆（求前 k 大）？
 
@@ -1017,39 +1037,39 @@ list的每个元素都放在一块内存中，但它们是不连续的，通过�
 
 - 问：`push_heap`前必须先把元素插入容器末尾，为什么？
 
-  `push_heap`的逻辑是基于 “容器末尾新增了一个元素”，**仅负责向上调整堆结构**，若元素未在末尾，会破坏堆的索引关系，导致调整失败。
+  `push_heap`的逻辑是基于 “容器末尾新增了一个元素”，**仅负责向上调整堆结构**，若元素未在末尾，会破坏堆的**索引关系**，导致调整失败。
 
 # C++ 智能指针面试核心问题整理表
 
-| 问题分类                                                     | 核心面试问题                                  | 核心答案要点（完整版）                                       | 考察维度                 |          |          |          |
-| ------------------------------------------------------------ | --------------------------------------------- | ------------------------------------------------------------ | ------------------------ | -------- | -------- | -------- |
-| 基础认知                                                     | 智能指针的设计初衷？解决裸指针哪些问题？      | 1. 设计初衷：C++ 中动态内存（`new`/`delete`）需手动管理，易出现人为失误，智能指针通过 RAII（资源获取即初始化）机制，将动态内存与智能指针对象的生命周期绑定，实现内存自动化管理；2. 解决的裸指针问题：- 内存泄漏：忘记调用 `delete` 释放动态内存，智能指针析构时自动释放；- 悬空指针：内存释放后裸指针未置空，后续解引用导致未定义行为，智能指针析构后自动失效，无悬空风险；- 重复释放：同一裸指针多次调用 `delete`，智能指针仅在引用计数为 0 时释放，避免重复释放；- 异常安全：函数执行中抛出异常时，裸指针的 `delete` 可能无法执行，智能指针因析构函数自动调用，可保证内存释放。 | 核心价值理解             |          |          |          |
-|                                                              | C++ 标准库有哪些智能指针？头文件是什么？      | 1. 标准库智能指针分类：- 核心类型（C++11 引入，推荐使用）：`unique_ptr`（独占式智能指针）、`shared_ptr`（共享式智能指针）、`weak_ptr`（弱引用智能指针，配合 `shared_ptr` 使用）；- 废弃类型（C++98 引入，C++11 标记为废弃）：`auto_ptr`（设计缺陷，已被 `unique_ptr` 替代）；2. 头文件：所有智能指针均定义在 `<memory>` 头文件中，使用时需包含该头文件。 | 基础分类与规范           |          |          |          |
-|                                                              | auto_ptr 为何废弃？unique_ptr 如何改进？      | 1. `auto_ptr` 被废弃的核心原因：- 拷贝 / 赋值语义缺陷：拷贝 `auto_ptr` 或对其赋值时，会转移所有权（原 `auto_ptr` 变为空指针），这种隐式转移极易导致误用（如容器中存储 `auto_ptr`，遍历 / 排序时触发拷贝，导致大量指针悬空）；- 无移动语义支持：C++11 引入移动语义后，`auto_ptr` 的设计无法适配新特性；2. `unique_ptr` 的改进：- 禁用拷贝：将拷贝构造函数和拷贝赋值运算符声明为 `delete`，编译期直接拦截非法拷贝操作；- 支持显式移动：仅通过 `std::move` 实现所有权转移，语义清晰，避免隐式错误；- 支持数组管理：原生支持动态数组，析构时自动调用 `delete[]`，而 `auto_ptr` 仅支持单个对象。 | 演进逻辑与设计思想       |          |          |          |
-| unique_ptr 核心                                              | unique_ptr 核心特性？适用场景？               | 1. `unique_ptr` 核心特性：- 独占所有权：同一时间仅能有一个 `unique_ptr` 指向某块动态内存，保证资源唯一归属；- 移动语义：仅支持 `std::move` 转移所有权，转移后原指针失效；- 自动释放：析构时（如超出作用域、被重置）自动调用 `delete`/`delete[]` 释放内存；- 轻量化：内存开销与裸指针一致（无额外计数等开销），性能接近裸指针；- 支持自定义删除器：可管理非内存资源（如文件句柄、套接字）；2. 适用场景：- 函数返回动态对象：无需手动管理，返回时自动移动，避免内存泄漏；- 容器存储独占对象：如 `vector<unique_ptr<Base>>`，利用多态管理子类对象，且保证对象唯一归属；- 替代单个动态对象的裸指针：如类成员指针，避免手动写析构函数释放；- 管理非内存资源：如文件指针、线程句柄，配合自定义删除器实现资源自动释放。 | 特性与场景匹配           |          |          |          |
-|                                                              | unique_ptr 能否管理数组？如何用？             | 1. `unique_ptr` 完全支持管理动态数组（C++11 起原生支持）；2. 语法格式：- 声明：`std::unique_ptr<int[]> ptr(new int[5]);`（尖括号中加 `[]` 标识数组类型）；- 访问：仅支持下标访问（`ptr[0] = 10;`），不支持解引用运算符（`*ptr`），因为数组无单个 “解引用” 语义；- 析构：自动调用 `delete[]` 释放数组，无需手动指定删除器；3. 示例代码：`cpp<br>#include <memory><br>int main() {<br> std::unique_ptr<int[]> arr_ptr(new int[3]{1, 2, 3});<br> arr_ptr[1] = 10; // 合法，修改第二个元素<br> // *arr_ptr = 20; // 非法，数组版unique_ptr无解引用运算符<br> return 0;<br>} // 析构时自动调用delete[]，释放数组<br>` | 数组管理细节             |          |          |          |
-|                                                              | 如何自定义 unique_ptr 的删除器？              | 1. 核心原理：`unique_ptr` 的删除器是模板参数，需在声明时指定，删除器可以是函数指针、函数对象、lambda 表达式（C++11 后）；2. 语法格式：- 函数指针版：`std::unique_ptr<Type, DeleterFuncPtr> ptr(new Type(), DeleterFunc);`；- lambda 版：需用 `decltype` 推导 lambda 类型，语法：`auto del = [](Type* p) { /* 释放逻辑 */ }; std::unique_ptr<Type, decltype(del)> ptr(new Type(), del);`；3. 示例（管理文件指针）：`cpp<br>#include <memory><br>#include <cstdio><br>// 自定义删除器：关闭文件<br>void close_file(FILE* fp) {<br> if (fp) fclose(fp);<br>}<br>int main() {<br> // 声明：删除器类型为函数指针，传入删除器函数地址<br> std::unique_ptr<FILE, decltype(&close_file)> fp(fopen("test.txt", "r"), close_file);<br> if (fp) { /* 操作文件 */ }<br> return 0;<br>} // 析构时自动调用close_file，关闭文件<br>`4. 注意事项：- 函数对象形式的删除器（如无捕获的 lambda）不会增加 `unique_ptr` 的内存开销；- 函数指针形式的删除器会使 `unique_ptr` 占用额外内存（存储指针地址）。 | 非内存资源管理能力       |          |          |          |
-| shared_ptr 核心                                              | shared_ptr 核心特性？底层实现原理？           | 1. `shared_ptr` 核心特性：- 共享所有权：多个 `shared_ptr` 可指向同一块动态内存，通过引用计数管理生命周期；- 拷贝 / 赋值：支持自由拷贝和赋值，拷贝时引用计数 +1，赋值时原指针引用计数 -1、新指针引用计数 +1；- 自动释放：当引用计数减至 0 时，自动调用删除器释放内存；- 线程安全：引用计数的增减是原子操作，多线程拷贝 / 析构 `shared_ptr` 不会导致计数错乱；- 支持自定义删除器：删除器存储在控制块中，不影响 `shared_ptr` 的大小；2. 底层实现原理：- `shared_ptr` 内部维护两个指针：① 资源指针：指向管理的动态对象 / 数组；② 控制块指针：指向一块独立的控制块内存，控制块包含：- 强引用计数：当前指向该资源的 `shared_ptr` 数量；- 弱引用计数：当前指向该资源的 `weak_ptr` 数量；- 删除器：释放资源的函数 / 对象；- 分配器：用于分配 / 释放控制块的内存；- 核心操作逻辑：- 拷贝 `shared_ptr`：控制块的强引用计数 +1；- 析构 `shared_ptr`：强引用计数 -1，若强引用计数为 0，释放资源；若弱引用计数也为 0，释放控制块；- 赋值 `shared_ptr`：先减原指针的强引用计数（可能释放资源），再增加新指针的强引用计数。 | 底层内存模型             |          |          |          |
-|                                                              | shared_ptr 引用计数线程安全吗？对象访问呢？   | 1. 引用计数的线程安全性：- 强引用计数和弱引用计数的增减操作是原子的（基于 `std::atomic` 实现），多线程同时拷贝、析构、赋值 `shared_ptr` 时，计数不会出现错乱，是线程安全的；2. 指向对象的访问安全性：- 非线程安全！`shared_ptr` 仅保证计数本身的线程安全，不保证对指向对象的读写安全；- 若多个线程同时修改 `shared_ptr` 指向的对象，必须通过互斥锁（`std::mutex`）、原子操作等方式手动同步；若仅读取对象，无需同步；3. 示例说明：`cpp<br>#include <memory><br>#include <thread><br>#include <mutex><br>std::shared_ptr<int> sp = std::make_shared<int>(10);<br>std::mutex mtx;<br>// 线程1：修改对象<br>void thread1() {<br> std::lock_guard<std::mutex> lock(mtx); // 必须加锁<br> *sp = 20;<br>}<br>// 线程2：读取对象<br>void thread2() {<br> std::lock_guard<std::mutex> lock(mtx); // 读取也建议加锁，避免读写冲突<br> printf("%d\n", *sp);<br>}<br>` | 线程安全边界认知         |          |          |          |
-|                                                              | shared_ptr 能否管理数组？注意事项？           | 1. `shared_ptr` 对数组的支持分为两个阶段：- C++17 及以后：原生支持动态数组，语法与 `unique_ptr` 类似，`std::shared_ptr<int[]> sp(new int[5]);`，析构时自动调用 `delete[]`，支持下标访问；- C++17 之前：不原生支持数组，若直接用 `shared_ptr<int> sp(new int[5]);`，析构时会调用 `delete` 而非 `delete[]`，导致数组内存泄漏，需手动指定自定义删除器；2. 不同版本的使用示例：- C++17 及以后：`cpp<br> #include <memory><br> int main() {<br> std::shared_ptr<int[]> sp(new int[3]{1,2,3});<br> sp[1] = 10; // 合法，下标访问<br> return 0;<br> } // 析构自动调用delete[]<br>`- C++17 之前：`cpp<br> #include <memory><br> int main() {<br> // 自定义删除器，指定delete[]<br> std::shared_ptr<int> sp(new int[3]{1,2,3}, [](int* p) { delete[] p; });<br> // sp[1] = 10; // C++17前不支持下标，需通过指针偏移访问：*(sp.get()+1) = 10;<br> return 0;<br> }<br>`3. 注意事项：- C++17 前数组版 `shared_ptr` 不支持下标访问，需通过 `get()` 获取裸指针后偏移；- 数组版 `shared_ptr` 的性能略低于 `unique_ptr`，因为需维护控制块和计数。 | 数组管理兼容性           |          |          |          |
-|                                                              | shared_ptr 循环引用是什么？如何解决？         | 1. 循环引用的定义：两个或多个 `shared_ptr` 互相指向对方（或形成闭环），导致各自的强引用计数无法减至 0，最终内存泄漏；2. 循环引用示例：`cpp<br>#include <memory><br>struct Node {<br> std::shared_ptr<Node> next;<br> ~Node() { printf("Node deleted\n"); } // 循环引用时不会执行<br>};<br>int main() {<br> auto n1 = std::make_shared<Node>();<br> auto n2 = std::make_shared<Node>();<br> n1->next = n2; // n1的next指向n2，n2的强引用计数+1（变为2）<br> n2->next = n1; // n2的next指向n1，n1的强引用计数+1（变为2）<br> return 0;<br>} // 析构时n1、n2的强引用计数各减1（变为1），无法释放，内存泄漏<br>`3. 解决方法：将闭环中的一个或多个 `shared_ptr` 改为 `weak_ptr`（弱引用不增加强引用计数）；4. 修复后的示例：`cpp<br>#include <memory><br>struct Node {<br> std::weak_ptr<Node> next; // 改为weak_ptr<br> ~Node() { printf("Node deleted\n"); } // 正常执行<br>};<br>int main() {<br> auto n1 = std::make_shared<Node>();<br> auto n2 = std::make_shared<Node>();<br> n1->next = n2; // weak_ptr不增加n2的强引用计数（仍为1）<br> n2->next = n1; // weak_ptr不增加n1的强引用计数（仍为1）<br> return 0;<br>} // 析构时n1、n2的强引用计数减至0，正常释放<br>`5. 核心逻辑：`weak_ptr` 指向 `shared_ptr` 管理的资源，但不增加强引用计数，仅作为 “观察者”，打破闭环后强引用计数可正常归 0。 | 核心缺陷与解决方案       |          |          |          |
-| weak_ptr 核心                                                | weak_ptr 核心特性？为何不能单独使用？         | 1. `weak_ptr` 核心特性：<br />- 弱引用：指向 `shared_ptr` 管理的资源，但不增加强引用计数，不影响资源的释放；<br />- 资源检测：通过 `expired()` 方法判断所指向的资源是否已被释放；<br />- 安全升级：通过 `lock()` 方法将自身升级为 `shared_ptr`，若资源未释放则返回有效 `shared_ptr`（强引用计数 +1），若已释放则返回空 `shared_ptr`；<br />- 无所有权：不参与资源的管理，仅作为 “观察者”；2. 不能单独使用的原因：- `weak_ptr` 没有重载解引用运算符（`*`）和箭头运算符（`->`），无法直接访问指向的资源；- `weak_ptr` 不管理资源的生命周期，即使 `weak_ptr` 存在，只要对应的 `shared_ptr` 全部析构，资源仍会被释放；- 必须通过 `lock()` 升级为 `shared_ptr` 后才能访问资源，这是为了保证访问时资源一定有效（若升级失败，`lock()` 返回空，可提前判空避免悬空访问）。 | 设计定位与使用约束       |          |          |          |
-|                                                              | weak_ptr 的 lock () 和 expired () 作用？      | 1. `expired()` 方法：- 功能：判断 `weak_ptr` 指向的资源是否已被释放（即对应的 `shared_ptr` 强引用计数是否为 0）；- 返回值：`bool` 类型，`true` 表示资源已释放，`false` 表示资源仍有效；- 语法：`bool is_expired = wp.expired();`；2. `lock()` 方法：- 功能：尝试将 `weak_ptr` 升级为 `shared_ptr`，是线程安全的操作；- 返回值：若资源有效，返回指向该资源的 `shared_ptr`（强引用计数 +1）；若资源已释放，返回空 `shared_ptr`；- 语法：`std::shared_ptr<Type> sp = wp.lock();`；3. 组合使用示例：`cpp<br>#include <memory><br>#include <iostream><br>int main() {<br> std::shared_ptr<int> sp = std::make_shared<int>(10);<br> std::weak_ptr<int> wp = sp;<br> // 检测资源是否有效<br> if (!wp.expired()) {<br> auto sp2 = wp.lock(); // 升级为shared_ptr<br> if (sp2) { // 双重判空，确保安全<br> std::cout << *sp2 << std::endl; // 输出10<br> }<br> }<br> sp.reset(); // 释放资源<br> std::cout << std::boolalpha << wp.expired() << std::endl; // 输出true<br> auto sp3 = wp.lock();<br> std::cout << std::boolalpha << (sp3 == nullptr) << std::endl; // 输出true<br> return 0;<br>}<br>`4. 注意事项：- 即使 `expired()` 返回 `false`，在调用 `lock()` 前资源也可能被其他线程释放，因此必须在 `lock()` 后判空，而非仅依赖 `expired()`；- `lock()` 是原子操作，可避免多线程下的竞态条件。 | 核心方法使用             |          |          |          |
-|                                                              | weak_ptr 除解决循环引用外，还有哪些场景？     | 1. 缓存 / 对象池场景：- 场景：对象池存储常用对象的 `shared_ptr`，外部通过 `weak_ptr` 引用缓存对象；当对象长时间未被使用时，对象池可释放 `shared_ptr`，外部 `weak_ptr` 通过 `expired()` 检测到后，重新从对象池获取新对象，避免缓存占用过多内存；2. 观察者模式：- 场景：观察者（Observer）持有被观察者（Subject）的 `weak_ptr`，被观察者销毁时，观察者可通过 `expired()` 检测到，避免访问已销毁的被观察者；- 优势：无需手动维护 “观察者列表” 的删除逻辑，被观察者销毁后自动失效；3. 多线程资源检测：- 场景：多线程共享一个动态资源，主线程可能随时释放该资源，工作线程通过 `weak_ptr` 的 `lock()` 检测资源是否存在，若不存在则停止操作，避免访问悬空指针；4. 避免循环依赖的其他场景：- 如类之间的双向关联（A 包含 B，B 需引用 A），将 B 中对 A 的引用改为 `weak_ptr`，既保证能访问 A，又不形成循环引用。 | 场景拓展应用             |          |          |          |
-| 使用细节 & 易错点                                            | 为何优先用 make_shared/make_unique 而非 new？ | 1. 减少内存分配次数：- `make_shared`：一次性分配 “对象内存 + 控制块内存”，而 `std::shared_ptr<int> sp(new int(10));` 需分两次分配（先分配 int 对象，再分配控制块），减少内存碎片，提升性能；- `make_unique`：虽无控制块，但语法更简洁，且避免裸 `new` 分散在代码中；<br />2. 提升异常安全：- 问题示例：`func(std::shared_ptr<A>(new A()), std::shared_ptr<B>(new B()));`，编译器可能先执行 `new A()`、`new B()`，再构造 `shared_ptr`；若 `new B()` 抛出异常，`new A()` 已分配的内存无法释放，导致泄漏；- 解决：`func(std::make_shared<A>(), std::make_shared<B>());`，`make_shared` 先构造 `shared_ptr` 再分配内存，异常时不会泄漏；<br />3. 语法简洁：- 避免裸 `new` 出现在代码中，符合 RAII 思想，代码更易维护；<br />4. 注意事项：- `make_shared` 无法自定义删除器，若需自定义删除器，仍需用 `new` 构造；- `make_unique` 是 C++14 引入，C++11 需手动实现或用 `new`。 | 最佳实践认知             |          |          |          |
-|                                                              | 智能指针能否指向栈内存？为什么？              | 1. 绝对禁止将智能指针指向栈内存；2. 核心原因：- 智能指针的析构函数会调用 `delete`（或 `delete[]`）释放内存，而栈内存由操作系统自动管理（函数调用结束后栈帧销毁），对栈内存调用 `delete` 会导致未定义行为（如程序崩溃、内存错乱）；3. 错误示例：`cpp<br>#include <memory><br>int main() {<br> int a = 10; // 栈内存<br> std::unique_ptr<int> sp(&a); // 错误：指向栈内存<br> return 0;<br>} // 析构sp时调用delete &a，导致未定义行为<br>`4. 补充说明：- 智能指针仅用于管理**动态分配的内存**（`new`/`new[]` 分配）或自定义的非内存资源（如文件句柄），不可用于栈资源。 | 栈 / 堆内存管理边界      |          |          |          |
-|                                                              | shared_ptr 控制块何时创建？多控制块坑点？     | 1. 控制块的创建时机：- 调用 `std::make_shared` 时：一次性创建对象内存和控制块，控制块与对象内存连续；- 用裸指针构造 `shared_ptr` 时：在 `shared_ptr` 构造函数中创建控制块，控制块与对象内存分离；- 注意：`shared_ptr` 的控制块一旦创建，无法转移，每个裸指针首次构造 `shared_ptr` 时都会创建新的控制块；2. 多控制块坑点：- 场景：同一裸指针构造多个 `shared_ptr`，每个 `shared_ptr` 都创建独立的控制块，导致多个控制块管理同一块内存，析构时重复释放，触发未定义行为；- 错误示例：`cpp<br>#include <memory><br>int main() {<br> int* p = new int(10);<br> std::shared_ptr<int> sp1(p); // 创建控制块1，强引用计数=1<br> std::shared_ptr<int> sp2(p); // 创建控制块2，强引用计数=1<br> return 0;<br>} // 析构sp2时释放p，析构sp1时再次释放p，重复释放崩溃<br>`- 解决方法：① 始终通过拷贝 `shared_ptr` 而非裸指针构造新的 `shared_ptr`；② 优先使用 `make_shared` 而非裸指针构造。 | 控制块核心坑点           |          |          |          |
-|                                                              | 智能指针大小？与裸指针区别？                  | 1. 裸指针大小：由系统寻址能力决定，32 位系统 4 字节，64 位系统 8 字节；2. 各智能指针大小：- `unique_ptr`：- 默认情况（无自定义删除器 / 删除器为无捕获 lambda / 函数对象）：大小与裸指针一致（4/8 字节）；- 自定义删除器为函数指针：大小 = 裸指针大小 + 函数指针大小（64 位系统 16 字节）；- `shared_ptr`：大小为裸指针的 2 倍（64 位系统 16 字节），因为内部存储 “资源指针 + 控制块指针”；- `weak_ptr`：大小与 `shared_ptr` 一致（64 位系统 16 字节），因为内部存储 “控制块指针”，需通过控制块访问资源；3. 示例验证（64 位系统）：`cpp<br>#include <memory><br>#include <iostream><br>int main() {<br> std::cout << "裸指针大小：" << sizeof(int*) << std::endl; // 8字节<br> std::unique_ptr<int> up;<br> std::cout << "unique_ptr大小：" << sizeof(up) << std::endl; // 8字节<br> std::shared_ptr<int> sp;<br> std::cout << "shared_ptr大小：" << sizeof(sp) << std::endl; // 16字节<br> std::weak_ptr<int> wp;<br> std::cout << "weak_ptr大小：" << sizeof(wp) << std::endl; // 16字节<br> return 0;<br>}<br>` | 内存开销认知             |          |          |          |
-| 手撕 / 代码分析                                              | 用 unique_ptr 实现对象工厂？                  | 1. 核心思路：- 定义基类和多个子类，利用多态特性；- 工厂函数根据参数返回不同子类的 `unique_ptr<基类>`，利用 `unique_ptr` 的移动语义（函数返回时自动移动）；- 保证每个对象的所有权唯一，避免内存泄漏；2. 完整示例代码：`cpp<br>#include <memory><br>#include <iostream><br>// 基类：产品<br>class Product {<br>public:<br> virtual void show() const = 0;<br> virtual ~Product() = default; // 虚析构，保证子类析构<br>};<br>// 子类1：产品A<br>class ProductA : public Product {<br>public:<br> void show() const override {<br> std::cout << "Product A" << std::endl;<br> }<br>};<br>// 子类2：产品B<br>class ProductB : public Product {<br>public:<br> void show() const override {<br> std::cout << "Product B" << std::endl;<br> }<br>};<br>// 工厂函数：创建产品<br>std::unique_ptr<Product> createProduct(int type) {<br> switch (type) {<br> case 1:<br> return std::make_unique<ProductA>(); // 返回ProductA的unique_ptr<br> case 2:<br> return std::make_unique<ProductB>(); // 返回ProductB的unique_ptr<br> default:<br> return nullptr;<br> }<br>}<br>int main() {<br> auto prod1 = createProduct(1);<br> if (prod1) prod1->show(); // 输出Product A<br> auto prod2 = createProduct(2);<br> if (prod2) prod2->show(); // 输出Product B<br> return 0;<br>} // 析构时自动释放prod1、prod2，无需手动管理<br>`3. 优势：- 工厂函数无需返回裸指针，避免调用者忘记释放；- `unique_ptr` 保证产品对象的所有权唯一，不会出现重复释放。 | 实操与多态结合           |          |          |          |
-|                                                              | 分析 weak_ptr 使用不当导致崩溃的代码？        | 1. 错误代码示例：`cpp<br>#include <memory><br>#include <iostream><br>int main() {<br> std::shared_ptr<int> sp = std::make_shared<int>(10);<br> std::weak_ptr<int> wp = sp;<br> sp.reset(); // 释放资源，强引用计数归0<br> // 错误：直接解引用lock()返回的空shared_ptr<br> std::cout << *wp.lock() << std::endl;<br> return 0;<br>}<br>`2. 错误分析：- `sp.reset()` 释放了资源，`wp.lock()` 返回空 `shared_ptr`；- 对空 `shared_ptr` 解引用（`*wp.lock()`），等同于解引用空裸指针，触发未定义行为（程序崩溃）；3. 修复方案：- 调用 `lock()` 后必须判空，确认 `shared_ptr` 有效后再解引用；- 修复后代码：`cpp<br>#include <memory><br>#include <iostream><br>int main() {<br> std::shared_ptr<int> sp = std::make_shared<int>(10);<br> std::weak_ptr<int> wp = sp;<br> sp.reset();<br> auto sp2 = wp.lock();<br> if (sp2) { // 判空，确保安全<br> std::cout << *sp2 << std::endl;<br> } else {<br> std::cout << "资源已释放" << std::endl;<br> }<br> return 0;<br>} // 输出“资源已释放”，无崩溃<br>`4. 核心避坑点：- 永远不要直接解引用 `lock()` 的返回值，必须先判空；- `expired()` 仅作为参考，不能替代 `lock()` 后的判空（多线程场景下可能竞态）。 | 代码漏洞识别             |          |          |          |
-|                                                              | 修复 shared_ptr 循环引用的代码？              | 1. 循环引用的原始代码（见前文）；2. 修复核心逻辑：将闭环中的一个 `shared_ptr` 成员改为 `weak_ptr`，打破强引用闭环；3. 完整修复代码（以双向链表节点为例）：`cpp<br>#include <memory><br>#include <iostream><br>struct ListNode {<br> int val;<br> std::weak_ptr<ListNode> prev; // 改为weak_ptr<br> std::shared_ptr<ListNode> next;<br> ListNode(int v) : val(v) {}<br> ~ListNode() {<br> std::cout << "ListNode " << val << " deleted" << std::endl;<br> }<br>};<br>int main() {<br> auto node1 = std::make_shared<ListNode>(1);<br> auto node2 = std::make_shared<ListNode>(2);<br> // 建立双向关联<br> node1->next = node2; // node2强引用计数+1（变为2）<br> node2->prev = node1; // node1强引用计数不变（仍为1）<br> // 手动断开关联（可选，不影响析构）<br> node1->next.reset();<br> return 0;<br>} // 析构时node1计数减至0，释放；node2计数减至1，随后释放<br>`4. 输出结果：`<br>ListNode 1 deleted<br>ListNode 2 deleted<br>`5. 拓展说明：- 若为多节点闭环（如环形链表），只需将其中一个节点的 `shared_ptr` 改为 `weak_ptr` 即可；- 访问 `weak_ptr` 指向的节点时，需通过 `lock()` 升级为 `shared_ptr` 后操作。 | 问题修复能力             |          |          |          |
-| 拓展对比                                                     | unique_ptr 和 shared_ptr 如何选择？性能开销？ | 1. 选型核心原则：- 优先选 `unique_ptr`：只要场景允许（独占所有权），`unique_ptr` 是最优选择，因为其无额外开销，性能接近裸指针；- 选 `shared_ptr`：仅当需要共享所有权时使用（如多个对象需共同管理一个资源）；2. 性能开销对比： | 类型                     | 内存开销 | 时间开销 | 适用场景 |
-| ----------------------                                       | ----------------                              | ------------------------------                               | ------------------------ |          |          |          |
-| `unique_ptr`                                                 | 与裸指针一致                                  | 析构仅释放资源，无额外操作                                   | 独占所有权、高性能要求   |          |          |          |
-| `shared_ptr`                                                 | 裸指针 2 倍                                   | 拷贝 / 析构需原子操作更新计数                                | 共享所有权               |          |          |          |
-| 3. 选型示例：- 类成员指针：若类独占该资源，用 `unique_ptr`；若需与其他对象共享，用 `shared_ptr`；- 函数返回值：返回动态创建的对象，用 `unique_ptr`（自动移动，无计数开销）；- 容器存储对象：`vector<unique_ptr<Obj>>` 优于 `vector<shared_ptr<Obj>>`（除非需共享）；4. 注意事项：- 不要为了 “方便” 而滥用 `shared_ptr`，其原子操作的开销在高频调用场景下会被放大；- 若需将 `unique_ptr` 转为 `shared_ptr`，可直接拷贝（`std::shared_ptr<Obj> sp = std::move(up);`），反之不可。 | 选型逻辑与性能认知                            |                                                              |                          |          |          |          |
-|                                                              | C++17/20 对智能指针有哪些新特性？             | 1. C++17 新特性：- `shared_ptr` 原生支持动态数组：`std::shared_ptr<int[]> sp(new int[5]);`，析构自动调用 `delete[]`，支持下标访问；- `std::make_shared` 支持自定义删除器：此前 `make_shared` 无法指定删除器，C++17 补充该能力；- `shared_ptr` 支持 `operator[]`：数组版 `shared_ptr` 可通过下标访问元素；- `std::weak_ptr` 支持 `owner_before`：用于排序（如放入 `std::set`）；2. C++20 新特性：- `std::make_shared` 支持数组的初始化：`auto sp = std::make_shared<int[]>(3, 1);`（创建长度为 3 的数组，元素初始化为 1）；- `std::shared_ptr` 支持 `constexpr` 构造：编译期构造空 `shared_ptr`；- `std::weak_ptr` 增加 `expired()` 的 noexcept 重载：提升异常安全；- `std::unique_ptr` 支持 `operator<=>`：三路比较运算符，简化比较逻辑；3. 示例（C++20 数组初始化）：`cpp<br>#include <memory><br>#include <iostream><br>int main() {<br> // C++20：make_shared初始化数组<br> auto sp = std::make_shared<int[]>(3, 10);<br> std::cout << sp[0] << ", " << sp[1] << ", " << sp[2] << std::endl; // 输出10,10,10<br> return 0;<br>}<br>` | 新标准掌握程度           |          |          |          |
-|                                                              | 智能指针用于多线程需注意什么？                | 1. `shared_ptr` 的线程安全规则：- 引用计数线程安全：多线程同时拷贝、析构、赋值 `shared_ptr`，计数不会错乱；- 指向对象的访问非线程安全：多线程读写对象时，必须加锁（如 `std::mutex`）；- `shared_ptr` 自身的赋值 / 交换：线程安全，但不保证对象安全；2. `unique_ptr` 的多线程规则：- 不可多线程同时访问同一个 `unique_ptr`（如拷贝、修改指向），因为其无线程安全保护；- 多线程传递 `unique_ptr` 需通过 `std::move` 转移所有权，且保证同一时间只有一个线程操作该指针；3. `weak_ptr` 的多线程规则：- `lock()` 方法是线程安全的，可在多线程中安全升级为 `shared_ptr`；- `expired()` 是线程安全的，但结果仅为瞬时状态，需配合 `lock()` 判空；4. 多线程安全示例：`cpp<br>#include <memory><br>#include <thread><br>#include <mutex><br>std::shared_ptr<int> sp = std::make_shared<int>(10);<br>std::mutex mtx;<br>void threadFunc(int val) {<br> std::lock_guard<std::mutex> lock(mtx); // 加锁保护对象访问<br> *sp = val;<br>}<br>int main() {<br> std::thread t1(threadFunc, 20);<br> std::thread t2(threadFunc, 30);<br> t1.join();<br> t2.join();<br> std::cout << *sp << std::endl; // 输出30（最后执行的线程修改）<br> return 0;<br>}<br>`5. 核心注意事项：- 智能指针仅保证自身计数 / 状态的线程安全，不保证指向对象的安全；- 多线程操作 `unique_ptr` 时，需通过互斥锁或线程局部存储（`thread_local`）保证唯一性。 |                          |          |          |          |
+| 问题分类                                                     | 核心面试问题                                                 | 核心答案要点（完整版）                                       | 考察维度                 |          |          |          |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------ | -------- | -------- | -------- |
+| 基础认知                                                     | 智能指针的设计初衷？解决裸指针哪些问题？                     | 1. 设计初衷：C++ 中动态内存（`new`/`delete`）需手动管理，易出现人为失误，智能指针通过 RAII（资源获取即初始化）机制，将动态内存与智能指针对象的生命周期绑定，实现内存自动化管理；<br />2. 解决的裸指针问题：<br />- 内存泄漏：忘记调用 `delete` 释放动态内存，智能指针析构时自动释放；<br />- 悬空指针：内存释放后裸指针未置空，后续解引用导致未定义行为，智能指针析构后自动失效，无悬空风险；<br />- 重复释放：同一裸指针多次调用 `delete`，智能指针仅在引用计数为 0 时释放，避免重复释放；<br />- 异常安全：函数执行中抛出异常时，裸指针的 `delete` 可能无法执行，智能指针因析构函数自动调用，可保证内存释放。 | 核心价值理解             |          |          |          |
+|                                                              | C++ 标准库有哪些智能指针？头文件是什么？                     | 1. 标准库智能指针分类：- 核心类型（C++11 引入，推荐使用）：`unique_ptr`（独占式智能指针）、`shared_ptr`（共享式智能指针）、`weak_ptr`（弱引用智能指针，配合 `shared_ptr` 使用）；- 废弃类型（C++98 引入，C++11 标记为废弃）：`auto_ptr`（设计缺陷，已被 `unique_ptr` 替代）；2. 头文件：所有智能指针均定义在 `<memory>` 头文件中，使用时需包含该头文件。 | 基础分类与规范           |          |          |          |
+|                                                              | auto_ptr 为何废弃？unique_ptr 如何改进？                     | 1. `auto_ptr` 被废弃的核心原因：- 拷贝 / 赋值语义缺陷：拷贝 `auto_ptr` 或对其赋值时，会转移所有权（原 `auto_ptr` 变为空指针），这种隐式转移极易导致误用（如容器中存储 `auto_ptr`，遍历 / 排序时触发拷贝，导致大量指针悬空）；- 无移动语义支持：C++11 引入移动语义后，`auto_ptr` 的设计无法适配新特性；2. `unique_ptr` 的改进：- 禁用拷贝：将拷贝构造函数和拷贝赋值运算符声明为 `delete`，编译期直接拦截非法拷贝操作；- 支持显式移动：仅通过 `std::move` 实现所有权转移，语义清晰，避免隐式错误；- 支持数组管理：原生支持动态数组，析构时自动调用 `delete[]`，而 `auto_ptr` 仅支持单个对象。 | 演进逻辑与设计思想       |          |          |          |
+| unique_ptr 核心                                              | unique_ptr 核心特性？适用场景？                              | 1. `unique_ptr` 核心特性：<br />**- 独占所有权**：同一时间仅能有一个 `unique_ptr` 指向某块动态内存，保证资源唯一归属；<br />- **移动语义**：仅支持 `std::move` 转移所有权，转移后原指针失效；<br />- **自动释放**：析构时（如超出作用域、被重置）自动调用 `delete`/`delete[]` 释放内存；<br />- **轻量化**：内存开销与裸指针一致（无额外计数等开销），性能接近裸指针；<br />- **支持自定义删除器**：可管理非内存资源（如文件句柄、套接字）；2. 适用场景：<br />- **函数返回动态对象**：无需手动管理，返回时自动移动，避免内存泄漏；<br />- 容器存储独占对象：如 `vector<unique_ptr<Base>>`，利用多态管理子类对象，且保证对象唯一归属；<br />- **替代单个动态对象的裸指针**：如类成员指针，避免手动写析构函数释放；<br />- 管理非内存资源：如文件指针、线程句柄，配合自定义删除器实现资源自动释放。 | 特性与场景匹配           |          |          |          |
+|                                                              | unique_ptr 能否管理数组？如何用？                            | 1. `unique_ptr` 完全支持管理动态数组（C++11 起原生支持）；2. 语法格式：- 声明：`std::unique_ptr<int[]> ptr(new int[5]);`（尖括号中加 `[]` 标识数组类型）；- 访问：**仅支持下标访问**（`ptr[0] = 10;`），不支持解引用运算符（`*ptr`），因为数组无单个 “解引用” 语义；- 析构：自动调用 `delete[]` 释放数组，无需手动指定删除器；3. 示例代码：`cpp<br>#include <memory><br>int main() {<br> std::unique_ptr<int[]> arr_ptr(new int[3]{1, 2, 3});<br> arr_ptr[1] = 10; // 合法，修改第二个元素<br> // *arr_ptr = 20; // 非法，数组版unique_ptr无解引用运算符<br> return 0;<br>} // 析构时自动调用delete[]，释放数组<br>` | 数组管理细节             |          |          |          |
+|                                                              | 如何自定义 unique_ptr 的删除器？                             | 1. 核心原理：`unique_ptr` 的删除器是模板参数，需在声明时指定，删除器可以是函数指针、函数对象、lambda 表达式（C++11 后）；2. 语法格式：- 函数指针版：`std::unique_ptr<Type, DeleterFuncPtr> ptr(new Type(), DeleterFunc);`；- lambda 版：需用 `decltype` 推导 lambda 类型，语法：`auto del = [](Type* p) { /* 释放逻辑 */ }; std::unique_ptr<Type, decltype(del)> ptr(new Type(), del);`；3. 示例（管理文件指针）：`cpp<br>#include <memory><br>#include <cstdio><br>// 自定义删除器：关闭文件<br>void close_file(FILE* fp) {<br> if (fp) fclose(fp);<br>}<br>int main() {<br> // 声明：删除器类型为函数指针，传入删除器函数地址<br> std::unique_ptr<FILE, decltype(&close_file)> fp(fopen("test.txt", "r"), close_file);<br> if (fp) { /* 操作文件 */ }<br> return 0;<br>} // 析构时自动调用close_file，关闭文件<br>`4. 注意事项：- 函数对象形式的删除器（如无捕获的 lambda）不会增加 `unique_ptr` 的内存开销；- 函数指针形式的删除器会使 `unique_ptr` 占用额外内存（存储指针地址）。 | 非内存资源管理能力       |          |          |          |
+| shared_ptr 核心                                              | shared_ptr 核心特性 ？5点<br />底层实现原理？                | 1. `shared_ptr` 核心特性：<br />- **共享所有权**：多个 `shared_ptr` 可指向同一块动态内存，通过引用计数管理生命周期；<br />- **拷贝 / 赋值**：支持自由拷贝和赋值，拷贝时引用计数 +1，赋值时原指针引用计数 -1、新指针引用计数 +1；<br />- **自动释放**：当引用计数减至 0 时，自动调用删除器释放内存；<br />- **线程安全**：引用计数的增减是原子操作，多线程拷贝 / 析构 `shared_ptr` 不会导致计数错乱；<br />- **支持自定义删除器**：删除器存储在控制块中，不影响 `shared_ptr` 的大小；<br />2. 底层实现原理：- `shared_ptr` 内部维护两个指针：① 资源指针：指向管理的动态对象 / 数组；② 控制块指针：指向一块独立的控制块内存，控制块包含：- 强引用计数：当前指向该资源的 `shared_ptr` 数量；- 弱引用计数：当前指向该资源的 `weak_ptr` 数量；- 删除器：释放资源的函数 / 对象；- 分配器：用于分配 / 释放控制块的内存；- 核心操作逻辑：- 拷贝 `shared_ptr`：控制块的强引用计数 +1；- 析构 `shared_ptr`：强引用计数 -1，若强引用计数为 0，释放资源；若弱引用计数也为 0，释放控制块；<br />- 赋值 `shared_ptr`：先减原指针的强引用计数（可能释放资源），再增加新指针的强引用计数。 | 底层内存模型             |          |          |          |
+|                                                              | shared_ptr 引用计数线程安全吗？对象访问呢？<br />计数-安全<br />对象访问-非安全 | 1. 引用计数的线程安全性：- 强引用计数和弱引用计数的增减操作是原子的（基于 `std::atomic` 实现），多线程同时拷贝、析构、赋值 `shared_ptr` 时，计数不会出现错乱，是线程安全的；2**. 指向对象的访问安全性：- 非线程安全！**`shared_ptr` 仅保证计数本身的线程安全，不保证对指向对象的读写安全；- 若多个线程同时修改 `shared_ptr` 指向的对象，必须通过互斥锁（`std::mutex`）、原子操作等方式手动同步；若仅读取对象，无需同步；3. 示例说明：`cpp<br>#include <memory><br>#include <thread><br>#include <mutex><br>std::shared_ptr<int> sp = std::make_shared<int>(10);<br>std::mutex mtx;<br>// 线程1：修改对象<br>void thread1() {<br> std::lock_guard<std::mutex> lock(mtx); // 必须加锁<br> *sp = 20;<br>}<br>// 线程2：读取对象<br>void thread2() {<br> std::lock_guard<std::mutex> lock(mtx); // 读取也建议加锁，避免读写冲突<br> printf("%d\n", *sp);<br>}<br>` | 线程安全边界认知         |          |          |          |
+|                                                              | shared_ptr 能否管理数组？注意事项？                          | 1. `shared_ptr` 对数组的支持分为两个阶段：- C++17 及以后：原生支持动态数组，语法与 `unique_ptr` 类似，`std::shared_ptr<int[]> sp(new int[5]);`，析构时自动调用 `delete[]`，支持下标访问；- C++17 之前：不原生支持数组，若直接用 `shared_ptr<int> sp(new int[5]);`，析构时会调用 `delete` 而非 `delete[]`，导致数组内存泄漏，需手动指定自定义删除器；2. 不同版本的使用示例：- C++17 及以后：`cpp<br> #include <memory><br> int main() {<br> std::shared_ptr<int[]> sp(new int[3]{1,2,3});<br> sp[1] = 10; // 合法，下标访问<br> return 0;<br> } // 析构自动调用delete[]<br>`- C++17 之前：`cpp<br> #include <memory><br> int main() {<br> // 自定义删除器，指定delete[]<br> std::shared_ptr<int> sp(new int[3]{1,2,3}, [](int* p) { delete[] p; });<br> // sp[1] = 10; // C++17前不支持下标，需通过指针偏移访问：*(sp.get()+1) = 10;<br> return 0;<br> }<br>`3. 注意事项：- C++17 前数组版 `shared_ptr` 不支持下标访问，需通过 `get()` 获取裸指针后偏移；- 数组版 `shared_ptr` 的性能略低于 `unique_ptr`，因为需维护控制块和计数。 | 数组管理兼容性           |          |          |          |
+|                                                              | shared_ptr 循环引用是什么？如何解决？                        | 1. 循环引用的定义：两个或多个 `shared_ptr` 互相指向对方（或形成闭环），导致各自的强引用计数无法减至 0，最终内存泄漏；2. 循环引用示例：`cpp<br>#include <memory><br>struct Node {<br> std::shared_ptr<Node> next;<br> ~Node() { printf("Node deleted\n"); } // 循环引用时不会执行<br>};<br>int main() {<br> auto n1 = std::make_shared<Node>();<br> auto n2 = std::make_shared<Node>();<br> n1->next = n2; // n1的next指向n2，n2的强引用计数+1（变为2）<br> n2->next = n1; // n2的next指向n1，n1的强引用计数+1（变为2）<br> return 0;<br>} // 析构时n1、n2的强引用计数各减1（变为1），无法释放，内存泄漏<br>`3. 解决方法：将闭环中的一个或多个 `shared_ptr` 改为 `weak_ptr`（弱引用不增加强引用计数）；4. 修复后的示例：`cpp<br>#include <memory><br>struct Node {<br> std::weak_ptr<Node> next; // 改为weak_ptr<br> ~Node() { printf("Node deleted\n"); } // 正常执行<br>};<br>int main() {<br> auto n1 = std::make_shared<Node>();<br> auto n2 = std::make_shared<Node>();<br> n1->next = n2; // weak_ptr不增加n2的强引用计数（仍为1）<br> n2->next = n1; // weak_ptr不增加n1的强引用计数（仍为1）<br> return 0;<br>} // 析构时n1、n2的强引用计数减至0，正常释放<br>`5. 核心逻辑：`weak_ptr` 指向 `shared_ptr` 管理的资源，但不增加强引用计数，仅作为 “观察者”，打破闭环后强引用计数可正常归 0。 | 核心缺陷与解决方案       |          |          |          |
+| weak_ptr 核心                                                | weak_ptr 核心特性？为何不能单独使用？                        | 1. `weak_ptr` 核心特性：<br />- 弱引用：指向 `shared_ptr` 管理的资源，但不增加强引用计数，不影响资源的释放；<br />- 资源检测：通过 `expired()` 方法判断所指向的资源是否已被释放；<br />- 安全升级：通过 `lock()` 方法将自身升级为 `shared_ptr`，若资源未释放则返回有效 `shared_ptr`（强引用计数 +1），若已释放则返回空 `shared_ptr`；<br />- 无所有权：不参与资源的管理，仅作为 “观察者”；2. 不能单独使用的原因：- `weak_ptr` 没有重载解引用运算符（`*`）和箭头运算符（`->`），无法直接访问指向的资源；- `weak_ptr` 不管理资源的生命周期，即使 `weak_ptr` 存在，只要对应的 `shared_ptr` 全部析构，资源仍会被释放；- 必须通过 `lock()` 升级为 `shared_ptr` 后才能访问资源，这是为了保证访问时资源一定有效（若升级失败，`lock()` 返回空，可提前判空避免悬空访问）。 | 设计定位与使用约束       |          |          |          |
+|                                                              | weak_ptr 的 lock () 和 expired () 作用？                     | 1. `expired()` 方法：- 功能：判断 `weak_ptr` 指向的资源是否已被释放（即对应的 `shared_ptr` 强引用计数是否为 0）；- 返回值：`bool` 类型，`true` 表示资源已释放，`false` 表示资源仍有效；- 语法：`bool is_expired = wp.expired();`；2. `lock()` 方法：- 功能：尝试将 `weak_ptr` 升级为 `shared_ptr`，是线程安全的操作；- 返回值：若资源有效，返回指向该资源的 `shared_ptr`（强引用计数 +1）；若资源已释放，返回空 `shared_ptr`；- 语法：`std::shared_ptr<Type> sp = wp.lock();`；3. 组合使用示例：`cpp<br>#include <memory><br>#include <iostream><br>int main() {<br> std::shared_ptr<int> sp = std::make_shared<int>(10);<br> std::weak_ptr<int> wp = sp;<br> // 检测资源是否有效<br> if (!wp.expired()) {<br> auto sp2 = wp.lock(); // 升级为shared_ptr<br> if (sp2) { // 双重判空，确保安全<br> std::cout << *sp2 << std::endl; // 输出10<br> }<br> }<br> sp.reset(); // 释放资源<br> std::cout << std::boolalpha << wp.expired() << std::endl; // 输出true<br> auto sp3 = wp.lock();<br> std::cout << std::boolalpha << (sp3 == nullptr) << std::endl; // 输出true<br> return 0;<br>}<br>`4. 注意事项：- 即使 `expired()` 返回 `false`，在调用 `lock()` 前资源也可能被其他线程释放，因此必须在 `lock()` 后判空，而非仅依赖 `expired()`；- `lock()` 是原子操作，可避免多线程下的竞态条件。 | 核心方法使用             |          |          |          |
+|                                                              | weak_ptr 除解决循环引用外，还有哪些场景？                    | 1. 缓存 / 对象池场景：- 场景：对象池存储常用对象的 `shared_ptr`，外部通过 `weak_ptr` 引用缓存对象；当对象长时间未被使用时，对象池可释放 `shared_ptr`，外部 `weak_ptr` 通过 `expired()` 检测到后，重新从对象池获取新对象，避免缓存占用过多内存；2. 观察者模式：- 场景：观察者（Observer）持有被观察者（Subject）的 `weak_ptr`，被观察者销毁时，观察者可通过 `expired()` 检测到，避免访问已销毁的被观察者；- 优势：无需手动维护 “观察者列表” 的删除逻辑，被观察者销毁后自动失效；3. 多线程资源检测：- 场景：多线程共享一个动态资源，主线程可能随时释放该资源，工作线程通过 `weak_ptr` 的 `lock()` 检测资源是否存在，若不存在则停止操作，避免访问悬空指针；4. 避免循环依赖的其他场景：- 如类之间的双向关联（A 包含 B，B 需引用 A），将 B 中对 A 的引用改为 `weak_ptr`，既保证能访问 A，又不形成循环引用。 | 场景拓展应用             |          |          |          |
+| 使用细节 & 易错点                                            | 为何优先用 make_shared/make_unique 而非 new？                | 1. 减少内存分配次数：- `make_shared`：一次性分配 “对象内存 + 控制块内存”，而 `std::shared_ptr<int> sp(new int(10));` 需分两次分配（先分配 int 对象，再分配控制块），减少内存碎片，提升性能；- `make_unique`：虽无控制块，但语法更简洁，且避免裸 `new` 分散在代码中；<br />2. 提升异常安全：- 问题示例：`func(std::shared_ptr<A>(new A()), std::shared_ptr<B>(new B()));`，编译器可能先执行 `new A()`、`new B()`，再构造 `shared_ptr`；若 `new B()` 抛出异常，`new A()` 已分配的内存无法释放，导致泄漏；- 解决：`func(std::make_shared<A>(), std::make_shared<B>());`，`make_shared` 先构造 `shared_ptr` 再分配内存，异常时不会泄漏；<br />3. 语法简洁：- 避免裸 `new` 出现在代码中，符合 RAII 思想，代码更易维护；<br />4. 注意事项：- `make_shared` 无法自定义删除器，若需自定义删除器，仍需用 `new` 构造；- `make_unique` 是 C++14 引入，C++11 需手动实现或用 `new`。 | 最佳实践认知             |          |          |          |
+|                                                              | 智能指针能否指向栈内存？为什么？                             | 1. 绝对禁止将智能指针指向栈内存；2. 核心原因：- 智能指针的析构函数会调用 `delete`（或 `delete[]`）释放内存，而栈内存由操作系统自动管理（函数调用结束后栈帧销毁），对栈内存调用 `delete` 会导致未定义行为（如程序崩溃、内存错乱）；3. 错误示例：`cpp<br>#include <memory><br>int main() {<br> int a = 10; // 栈内存<br> std::unique_ptr<int> sp(&a); // 错误：指向栈内存<br> return 0;<br>} // 析构sp时调用delete &a，导致未定义行为<br>`4. 补充说明：- 智能指针仅用于管理**动态分配的内存**（`new`/`new[]` 分配）或自定义的非内存资源（如文件句柄），不可用于栈资源。 | 栈 / 堆内存管理边界      |          |          |          |
+|                                                              | shared_ptr 控制块何时创建？多控制块坑点？                    | 1. 控制块的创建时机：- 调用 `std::make_shared` 时：一次性创建对象内存和控制块，控制块与对象内存连续；- 用裸指针构造 `shared_ptr` 时：在 `shared_ptr` 构造函数中创建控制块，控制块与对象内存分离；- 注意：`shared_ptr` 的控制块一旦创建，无法转移，每个裸指针首次构造 `shared_ptr` 时都会创建新的控制块；2. 多控制块坑点：- 场景：同一裸指针构造多个 `shared_ptr`，每个 `shared_ptr` 都创建独立的控制块，导致多个控制块管理同一块内存，析构时重复释放，触发未定义行为；- 错误示例：`cpp<br>#include <memory><br>int main() {<br> int* p = new int(10);<br> std::shared_ptr<int> sp1(p); // 创建控制块1，强引用计数=1<br> std::shared_ptr<int> sp2(p); // 创建控制块2，强引用计数=1<br> return 0;<br>} // 析构sp2时释放p，析构sp1时再次释放p，重复释放崩溃<br>`- 解决方法：① 始终通过拷贝 `shared_ptr` 而非裸指针构造新的 `shared_ptr`；② 优先使用 `make_shared` 而非裸指针构造。 | 控制块核心坑点           |          |          |          |
+|                                                              | 智能指针大小？与裸指针区别？                                 | 1. 裸指针大小：由系统寻址能力决定，32 位系统 4 字节，64 位系统 8 字节；2. 各智能指针大小：- `unique_ptr`：- 默认情况（无自定义删除器 / 删除器为无捕获 lambda / 函数对象）：大小与裸指针一致（4/8 字节）；- 自定义删除器为函数指针：大小 = 裸指针大小 + 函数指针大小（64 位系统 16 字节）；- `shared_ptr`：大小为裸指针的 2 倍（64 位系统 16 字节），因为内部存储 “资源指针 + 控制块指针”；- `weak_ptr`：大小与 `shared_ptr` 一致（64 位系统 16 字节），因为内部存储 “控制块指针”，需通过控制块访问资源；3. 示例验证（64 位系统）：`cpp<br>#include <memory><br>#include <iostream><br>int main() {<br> std::cout << "裸指针大小：" << sizeof(int*) << std::endl; // 8字节<br> std::unique_ptr<int> up;<br> std::cout << "unique_ptr大小：" << sizeof(up) << std::endl; // 8字节<br> std::shared_ptr<int> sp;<br> std::cout << "shared_ptr大小：" << sizeof(sp) << std::endl; // 16字节<br> std::weak_ptr<int> wp;<br> std::cout << "weak_ptr大小：" << sizeof(wp) << std::endl; // 16字节<br> return 0;<br>}<br>` | 内存开销认知             |          |          |          |
+| 手撕 / 代码分析                                              | 用 unique_ptr 实现对象工厂？                                 | 1. 核心思路：- 定义基类和多个子类，利用多态特性；- 工厂函数根据参数返回不同子类的 `unique_ptr<基类>`，利用 `unique_ptr` 的移动语义（函数返回时自动移动）；- 保证每个对象的所有权唯一，避免内存泄漏；2. 完整示例代码：`cpp<br>#include <memory><br>#include <iostream><br>// 基类：产品<br>class Product {<br>public:<br> virtual void show() const = 0;<br> virtual ~Product() = default; // 虚析构，保证子类析构<br>};<br>// 子类1：产品A<br>class ProductA : public Product {<br>public:<br> void show() const override {<br> std::cout << "Product A" << std::endl;<br> }<br>};<br>// 子类2：产品B<br>class ProductB : public Product {<br>public:<br> void show() const override {<br> std::cout << "Product B" << std::endl;<br> }<br>};<br>// 工厂函数：创建产品<br>std::unique_ptr<Product> createProduct(int type) {<br> switch (type) {<br> case 1:<br> return std::make_unique<ProductA>(); // 返回ProductA的unique_ptr<br> case 2:<br> return std::make_unique<ProductB>(); // 返回ProductB的unique_ptr<br> default:<br> return nullptr;<br> }<br>}<br>int main() {<br> auto prod1 = createProduct(1);<br> if (prod1) prod1->show(); // 输出Product A<br> auto prod2 = createProduct(2);<br> if (prod2) prod2->show(); // 输出Product B<br> return 0;<br>} // 析构时自动释放prod1、prod2，无需手动管理<br>`3. 优势：- 工厂函数无需返回裸指针，避免调用者忘记释放；- `unique_ptr` 保证产品对象的所有权唯一，不会出现重复释放。 | 实操与多态结合           |          |          |          |
+|                                                              | 分析 weak_ptr 使用不当导致崩溃的代码？                       | 1. 错误代码示例：`cpp<br>#include <memory><br>#include <iostream><br>int main() {<br> std::shared_ptr<int> sp = std::make_shared<int>(10);<br> std::weak_ptr<int> wp = sp;<br> sp.reset(); // 释放资源，强引用计数归0<br> // 错误：直接解引用lock()返回的空shared_ptr<br> std::cout << *wp.lock() << std::endl;<br> return 0;<br>}<br>`2. 错误分析：- `sp.reset()` 释放了资源，`wp.lock()` 返回空 `shared_ptr`；- 对空 `shared_ptr` 解引用（`*wp.lock()`），等同于解引用空裸指针，触发未定义行为（程序崩溃）；3. 修复方案：- 调用 `lock()` 后必须判空，确认 `shared_ptr` 有效后再解引用；- 修复后代码：`cpp<br>#include <memory><br>#include <iostream><br>int main() {<br> std::shared_ptr<int> sp = std::make_shared<int>(10);<br> std::weak_ptr<int> wp = sp;<br> sp.reset();<br> auto sp2 = wp.lock();<br> if (sp2) { // 判空，确保安全<br> std::cout << *sp2 << std::endl;<br> } else {<br> std::cout << "资源已释放" << std::endl;<br> }<br> return 0;<br>} // 输出“资源已释放”，无崩溃<br>`4. 核心避坑点：- 永远不要直接解引用 `lock()` 的返回值，必须先判空；- `expired()` 仅作为参考，不能替代 `lock()` 后的判空（多线程场景下可能竞态）。 | 代码漏洞识别             |          |          |          |
+|                                                              | 修复 shared_ptr 循环引用的代码？                             | 1. 循环引用的原始代码（见前文）；2. 修复核心逻辑：将闭环中的一个 `shared_ptr` 成员改为 `weak_ptr`，打破强引用闭环；3. 完整修复代码（以双向链表节点为例）：`cpp<br>#include <memory><br>#include <iostream><br>struct ListNode {<br> int val;<br> std::weak_ptr<ListNode> prev; // 改为weak_ptr<br> std::shared_ptr<ListNode> next;<br> ListNode(int v) : val(v) {}<br> ~ListNode() {<br> std::cout << "ListNode " << val << " deleted" << std::endl;<br> }<br>};<br>int main() {<br> auto node1 = std::make_shared<ListNode>(1);<br> auto node2 = std::make_shared<ListNode>(2);<br> // 建立双向关联<br> node1->next = node2; // node2强引用计数+1（变为2）<br> node2->prev = node1; // node1强引用计数不变（仍为1）<br> // 手动断开关联（可选，不影响析构）<br> node1->next.reset();<br> return 0;<br>} // 析构时node1计数减至0，释放；node2计数减至1，随后释放<br>`4. 输出结果：`<br>ListNode 1 deleted<br>ListNode 2 deleted<br>`5. 拓展说明：- 若为多节点闭环（如环形链表），只需将其中一个节点的 `shared_ptr` 改为 `weak_ptr` 即可；- 访问 `weak_ptr` 指向的节点时，需通过 `lock()` 升级为 `shared_ptr` 后操作。 | 问题修复能力             |          |          |          |
+| 拓展对比                                                     | unique_ptr 和 shared_ptr 如何选择？性能开销？                | 1. 选型核心原则：- 优先选 `unique_ptr`：只要场景允许（独占所有权），`unique_ptr` 是最优选择，因为其无额外开销，性能接近裸指针；- 选 `shared_ptr`：仅当需要共享所有权时使用（如多个对象需共同管理一个资源）；2. 性能开销对比： | 类型                     | 内存开销 | 时间开销 | 适用场景 |
+| ----------------------                                       | ----------------                                             | ------------------------------                               | ------------------------ |          |          |          |
+| `unique_ptr`                                                 | 与裸指针一致                                                 | 析构仅释放资源，无额外操作                                   | 独占所有权、高性能要求   |          |          |          |
+| `shared_ptr`                                                 | 裸指针 2 倍                                                  | 拷贝 / 析构需原子操作更新计数                                | 共享所有权               |          |          |          |
+| 3. 选型示例：- 类成员指针：若类独占该资源，用 `unique_ptr`；若需与其他对象共享，用 `shared_ptr`；- 函数返回值：返回动态创建的对象，用 `unique_ptr`（自动移动，无计数开销）；- 容器存储对象：`vector<unique_ptr<Obj>>` 优于 `vector<shared_ptr<Obj>>`（除非需共享）；4. 注意事项：- 不要为了 “方便” 而滥用 `shared_ptr`，其原子操作的开销在高频调用场景下会被放大；- 若需将 `unique_ptr` 转为 `shared_ptr`，可直接拷贝（`std::shared_ptr<Obj> sp = std::move(up);`），反之不可。 | 选型逻辑与性能认知                                           |                                                              |                          |          |          |          |
+|                                                              | C++17/20 对智能指针有哪些新特性？                            | 1. C++17 新特性：- `shared_ptr` 原生支持动态数组：`std::shared_ptr<int[]> sp(new int[5]);`，析构自动调用 `delete[]`，支持下标访问；- `std::make_shared` 支持自定义删除器：此前 `make_shared` 无法指定删除器，C++17 补充该能力；- `shared_ptr` 支持 `operator[]`：数组版 `shared_ptr` 可通过下标访问元素；- `std::weak_ptr` 支持 `owner_before`：用于排序（如放入 `std::set`）；2. C++20 新特性：- `std::make_shared` 支持数组的初始化：`auto sp = std::make_shared<int[]>(3, 1);`（创建长度为 3 的数组，元素初始化为 1）；- `std::shared_ptr` 支持 `constexpr` 构造：编译期构造空 `shared_ptr`；- `std::weak_ptr` 增加 `expired()` 的 noexcept 重载：提升异常安全；- `std::unique_ptr` 支持 `operator<=>`：三路比较运算符，简化比较逻辑；3. 示例（C++20 数组初始化）：`cpp<br>#include <memory><br>#include <iostream><br>int main() {<br> // C++20：make_shared初始化数组<br> auto sp = std::make_shared<int[]>(3, 10);<br> std::cout << sp[0] << ", " << sp[1] << ", " << sp[2] << std::endl; // 输出10,10,10<br> return 0;<br>}<br>` | 新标准掌握程度           |          |          |          |
+|                                                              | 智能指针用于多线程需注意什么？                               | 1. `shared_ptr` 的线程安全规则：- 引用计数线程安全：多线程同时拷贝、析构、赋值 `shared_ptr`，计数不会错乱；- 指向对象的访问非线程安全：多线程读写对象时，必须加锁（如 `std::mutex`）；- `shared_ptr` 自身的赋值 / 交换：线程安全，但不保证对象安全；2. `unique_ptr` 的多线程规则：- 不可多线程同时访问同一个 `unique_ptr`（如拷贝、修改指向），因为其无线程安全保护；- 多线程传递 `unique_ptr` 需通过 `std::move` 转移所有权，且保证同一时间只有一个线程操作该指针；3. `weak_ptr` 的多线程规则：- `lock()` 方法是线程安全的，可在多线程中安全升级为 `shared_ptr`；- `expired()` 是线程安全的，但结果仅为瞬时状态，需配合 `lock()` 判空；4. 多线程安全示例：`cpp<br>#include <memory><br>#include <thread><br>#include <mutex><br>std::shared_ptr<int> sp = std::make_shared<int>(10);<br>std::mutex mtx;<br>void threadFunc(int val) {<br> std::lock_guard<std::mutex> lock(mtx); // 加锁保护对象访问<br> *sp = val;<br>}<br>int main() {<br> std::thread t1(threadFunc, 20);<br> std::thread t2(threadFunc, 30);<br> t1.join();<br> t2.join();<br> std::cout << *sp << std::endl; // 输出30（最后执行的线程修改）<br> return 0;<br>}<br>`5. 核心注意事项：- 智能指针仅保证自身计数 / 状态的线程安全，不保证指向对象的安全；- 多线程操作 `unique_ptr` 时，需通过互斥锁或线程局部存储（`thread_local`）保证唯一性。 |                          |          |          |          |
 
 ### 栈和堆的区别：
 
@@ -1057,7 +1077,7 @@ list的每个元素都放在一块内存中，但它们是不连续的，通过�
 | ---------------- | -------------------------------- | -------------------------- |
 | 地址             | 从高向低增长                     | 从低向高                   |
 | 存储数据         | 局部变量，函数参数，函数调用信息 | 程序运行时动态内存分配数据 |
-| 数据的声明周期   | 与函数执行周期相同               | 有开发者控制               |
+| 数据生命周期     | 与函数执行周期相同               | 有开发者控制               |
 | 分配和释放的速度 | 分配和释放是自动的，很快         | 有开发者管理，相对慢       |
 
 ### C++内存分区
@@ -1099,7 +1119,7 @@ list的每个元素都放在一块内存中，但它们是不连续的，通过�
 
 * 如何防止内存泄漏：
   * 申请放在构造函数中，释放逻辑放在析构函数中。
-  * 将基类的析构函数生命为虚函数。
+  * 将基类的析构函数声明为虚函数。
 
 ### delete和free的区别
 
@@ -1124,6 +1144,7 @@ list的每个元素都放在一块内存中，但它们是不连续的，通过�
 ### 内存对齐：
 
 * 数据在内存中的存储起始地址是某个值的倍数。
+* 
 
 ### 进程的地址空间分布：
 
@@ -1209,7 +1230,7 @@ list的每个元素都放在一块内存中，但它们是不连续的，通过�
 * 基类虚函数的声明：基类中声明虚函数，用关键字`virtual`，以便于派生类可以重写（override）这些函数。
 * 派生类重写基类的虚函数。
 * 每个有虚函数的类都会有一个虚函数表（`vtable`）其存放着类中虚函数的地址。
-* 每个类会有一个隐含的虚函数指针`vptr`，其用来指向虚函数表。
+* 每个类的对象会有一个隐含的虚函数指针`vptr`，其用来指向虚函数表。
 * 当基类的指针或引用指向派生类的对象时，基类的虚函数指针->派生类的虚函数表。
 * 当基类的指针或引用调用虚函数时，基类的虚函数指针就会在派生类的虚函数表中查询。
 
@@ -1218,7 +1239,7 @@ list的每个元素都放在一块内存中，但它们是不连续的，通过�
 * 成员函数：
   * 归属：归属于类。
   * 功能：可以访问类的成员变量，和成员调用。
-  * 声明和定义：在类的内部，在类外要交域名。
+  * 声明和定义：在类的内部，在类外定义要加域名。
 * 成员变量：
   * 归属：归属于类的变量，存储在类的每个对象中。
   * 功能：每个对象都有一份变量的副本，在构造时创造，在析构时销毁。
@@ -1232,11 +1253,11 @@ list的每个元素都放在一块内存中，但它们是不连续的，通过�
   * 功能：对象之间共享，通过类名访问。
   * 定义和声明：在类内声明，在类外定义和初始化。
 
-### 什么时构造函数和析构函数
+### 什么是构造函数和析构函数
 
 * 构造函数：
 
-  * 在对象构造时自动调用的特殊函数：初始化对象的成员变量，为对象分配内存，执行必要的初始化操作。
+  * 在对象构造时自动调用的特殊函数：**初始化对象的成员变量，为对象分配内存，执行必要的初始化操作**。
   * 函数名与类名相同，没有返回值。
   * 可以有多个构造函数，根据形参的不同实现重载。
   * 默认构造函数：当类没有显示定义任何构造函数时，编译器会自动生成一个默认构造函数。没有参数，也可能执行一些默认初始化操作。
@@ -1257,7 +1278,7 @@ list的每个元素都放在一块内存中，但它们是不连续的，通过�
   
   ```
 
-* 析构函数：对象生命周期结束时调用的特殊函数，用来释放对象所占用资源，执行必要的清理操作。特点：
+* 析构函数：对象生命周期结束时调用的特殊函数，用来**释放对象所占用资源，执行必要的清理操作**。特点：
 
   * 函数名与类名相同，前面加波浪号~
   * 没有参数：不能重载
@@ -1265,9 +1286,9 @@ list的每个元素都放在一块内存中，但它们是不连续的，通过�
 
 ### C++构造函数有哪几种？
 
-* 默认构造函数：若类没有定义任何构造函数，编译器会为其生成一个默认构造函数，其没有参数，可以执行一些简单的初始化操作。
-* 带参数的构造函数：通过形参列表的不同实现构造函数重载，用传入的参数初始化成员变量。
-* 拷贝构造函数：通过已存在的对象创创建一个新对象，参数时同类型的引用
+* **默认构造函数**：若类没有定义任何构造函数，编译器会为其生成一个默认构造函数，其没有参数，可以执行一些简单的初始化操作。
+* **带参数的构造函数**：通过形参列表的不同实现构造函数重载，用传入的参数初始化成员变量。
+* **拷贝构造函数**：通过已存在的对象创创建一个新对象，参数是**同类型的常量引用**。
 
 ```cpp
 class MyClass {
@@ -1279,7 +1300,7 @@ public:
 };
 ```
 
-* 委托构造函数：在一个构造函数中调用同类的另一个构造函数，减少代码重复。在成员初始化列表或构造函数内调用。
+* **委托构造函数**：在一个构造函数中调用同类的另一个构造函数，减少代码重复。在成员初始化列表或构造函数内调用。
 
 ```cpp
 class MyClass {
@@ -1299,16 +1320,16 @@ public:
 
 | 类别           | 虚函数                                                       | 纯虚函数                                                     |
 | -------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| 实现           | 在基类中有声明实现。<br />派生类中可选择是否实现，若不实现，提供基类的实现。 | 可以有实现，必须在类的外部定义。可以在派生类中调用。<br />派生类若不实现，则 |
-| 是否允许实例化 | 允许                                                         | 不允许，包含虚函数的类是抽象类，不能实例化。                 |
 | 声明           | `virtual`关键字声明                                          | 通过在虚函数后加`=0`修饰                                     |
-| 目的           | 实现多态                                                     | 提供接口规范，要求派生类提供相关实现。                       |
+| 实现           | 在基类中有声明实现。<br />派生类中可选择是否实现，若不实现，提供基类的实现。 | 可以有实现，必须在类的外部定义。可以在派生类中调用。<br />派生类若不实现，则派生类也是抽象类。 |
+| 是否允许实例化 | 允许                                                         | 不允许，包含虚函数的类是抽象类，不能实例化。                 |
+| 目的           | 实现多态                                                     | 提供**接口规范**，要求派生类提供相关实现。                   |
 
 ### 什么是抽象类和纯虚函数？
 
 抽象类：包含纯虚函数的类是抽象类，其可以包含普通的成员变量，成员函数，但其不能被实例化。只能被作用继承的基类。
 
-纯虚函数：`virtual`关键字和`=0`修饰的类中的成员函数，其类是抽象类。其派生类若不重写纯虚函数，派生类也是抽象类。
+纯虚函数：`virtual`关键字和`=0`修饰的类中的成员函数，其所属类是抽象类。其派生类若不重写纯虚函数，派生类也是抽象类。
 
 ### 虚析构的作用
 
@@ -1316,11 +1337,18 @@ public:
 
 ### 为什么要虚析构，而不是虚构造？
 
-由于对象构造的顺序决定的。
+为什么要虚析构：
 
-* vptr的初始化时机：在创建派生类时，基类部分优先构造。在进入基类的构造函数之前，编译器会自动初始化该**对象基类部分的虚函数指针(vptr)**，使其**指向其基类的虚函数表（vtable）**。
-* 虚函数动态绑定是“**已存在的对象**”，而构造函数的核心是构造对象。二者无法兼容。
-* 构造函数尚未完全创建，vptr要么不存在，要么仅指向当前构造阶段的对象，**无法实现派生类的动态绑定**。
+* 虚析构的作用是：多态场景下，派生类对象通过基类的指针释放时，能够完成正确的调用。
+* 实现逻辑：
+  * 基类中声明虚析构函数，基类的vtabl中包含析构函数的入口。
+  * 派生类会重写该入口，指向自己的析构函数。
+  * 销毁对象时，vptr会vtable找到正确的析构函数。
+
+不是虚构造的原因：
+
+* 构造函数的作用是**初始化对象本身**，对象构造完之前，**vptr尚未完全指向派生类的虚函数表**。
+* 构造函数的调用规则：**编译期确定，而非运行期**。构造函数是“**静态绑定**”的—编译器在编译阶段就确认要调用构造函数，而不是运行阶段。
 
 ### 那些函数不能被声明为虚函数
 
@@ -1341,5 +1369,5 @@ public:
   * 复制对象以及其成员变量的值。
   * 对于内部动态资源不会复制，新对象与原对象共享一份。
 * 深拷贝：
-  * 房租对象及其成员变量的值。
+  * 复制对象及其成员变量的值。
   * 对于内部动态资源也会复制，拥有自己独立的副本。
