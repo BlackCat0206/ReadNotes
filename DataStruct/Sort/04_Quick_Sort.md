@@ -88,6 +88,42 @@ void Sort_Swap(int* left, int* right)
     return;
 }
 
+void _QuickSortHoare3(vector<int>& arr, int left, int right)
+{
+    if (left >= right)
+    {
+        return;
+    }
+
+    // 选择基准值,防止有序数组，选择中间值
+    int index = left + (right - left) / 2;
+    int baseValue = arr[index];
+
+    int l = left;
+    int r = right;
+    int i = left;   // 当前遍历指针
+    while (i <= r)
+    {
+        if (arr[i] > baseValue)
+        {
+            SortSwap(&arr[i], &arr[l]);
+            l++;
+            i++;
+        }
+        else if (arr[i] < baseValue)
+        {
+            SortSwap(&arr[i], &arr[r]);
+            r--;
+        }
+        else
+        {
+            i++;
+        }
+    }
+    _QuickSortHoare3(arr, left, l - 1);
+    _QuickSortHoare3(arr, r + 1, right);
+}
+
 /**
  * @brief hoare排序法
  * @param [in] arr 数组
