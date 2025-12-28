@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "gcc - 启动调试",  // 调试配置名称
+            "type": "cppvsdbg",  // 调试类型（兼容mingw64的gdb）
+            "request": "launch",
+            "program": "${fileDirname}/${fileBasenameNoExtension}.exe",  // 要调试的可执行文件（与编译输出一致）
+            "args": [],  // 程序运行参数，无则留空
+            "stopAtEntry": false,  // 是否在程序入口处自动停止（false=不停止，按需修改）
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,  // 是否弹出外部cmd窗口（false=在VSCode终端输出，按需修改）
+            "preLaunchTask": "C/C++: gcc 生成可执行文件",  // 调试前先执行的编译任务（与tasks.json的label一致）
+            "miDebuggerPath": "D:\\msys64\\ucrt64\\bin\\gdb.exe",  // 替换为你的gdb实际路径
+            "setupCommands": [
+                {
+                    "description": "为gdb启用整齐打印",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+    ]
+}

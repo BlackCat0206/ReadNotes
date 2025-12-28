@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "Win32-mingw64",
+            "includePath": [
+                "${workspaceFolder}/**"  // 包含工作区所有目录的头文件
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "D:\\msys64\\ucrt64\\bin\\gcc.exe",  // 替换为你的gcc实际路径（注意用/或\\）
+            "cStandard": "c17",  // 可选，支持c99、c11、c17等
+            "cppStandard": "c++17",  // 可选，支持c++11、c++14等
+            "intelliSenseMode": "gcc-x64",  // 对应mingw64的64位gcc
+            "configurationProvider": "ms-vscode.cpptools"
+        }
+    ],
+    "version": 4
+}
