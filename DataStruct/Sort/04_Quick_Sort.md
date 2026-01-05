@@ -102,7 +102,7 @@ void _QuickSortHoare3(vector<int>& arr, int left, int right)
     int l = left;
     int r = right;
     int i = left;   // 当前遍历指针
-    while (i <= r)
+    while (i <= r)	// 注意遍历条件
     {
         if (arr[i] > baseValue)
         {
