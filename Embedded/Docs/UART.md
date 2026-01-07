@@ -90,7 +90,7 @@ UART（*Universal Asynchronous Receiver/Transmitter*）：通用异步收发器
 | **最大传输距离** | 15 米                                               | 1200 米（100kbps 下）                                        |
 | **最大传输速率** | ≤20kbps                                             | 最高 10Mbps                                                  |
 | **组网能力**     | 点对点，仅 2 节点                                   | 总线型，最多 32 节点（可扩展）                               |
-| **抗干扰能力**   | 弱                                                  | 强（适合工业环境）                                           |
+| **抗干扰能力**   | **弱**                                              | **强（适合工业环境）**                                       |
 | **典型接口**     | DB9 串口                                            | 螺丝端子、RJ45                                               |
 
 ## 三、寄存器
@@ -120,6 +120,26 @@ UART（*Universal Asynchronous Receiver/Transmitter*）：通用异步收发器
 * UARTx_UBIR：UART BRM Incremental Register
 * UARTx_UBMR：UART BRM Modulator Register
   * 通过UBIR和UBMR将频率降低至115200.
+
+**实验函数逻辑：**
+
+初始化函数：
+
+* 关闭UART使能
+* 配置：帧格式（wordsize，数据校验模式，数据校验使能），忽略RTX输入信号，强制设置位低电平，RXD 
+* 使能：接收使能、发送使能
+* 时钟：IBMR、IBIR、UART_UFCR 配置。
+* 使能当前串口
+
+**发送函数：**
+
+* 等待上一个数据发送完成
+* 将数据填充发送寄存器
+
+接收函数：
+
+* 等待数据数据接收完成
+* 返回数据
 
 ## 四、可变参数的理解
 
