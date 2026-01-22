@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "iostream": "cpp",
+        "memory": "cpp",
+        "functional": "cpp",
+        "new": "cpp",
+        "ostream": "cpp",
+        "stdexcept": "cpp"
+    }
+}
