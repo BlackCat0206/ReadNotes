@@ -264,7 +264,7 @@ for (auto& p : intervals)
 * 左下角出发，比目标元素大上走，比目标元素小左走，匹配返回`true`。
 * 边界`while(x <= matrix[0].size() - 1 && y >= 0)`
 
-### 链表
+### 2.8 链表
 
 **160_相交链表：**
 
@@ -391,5 +391,49 @@ if (nullptr != l1) {
             pre = cur;
             cur = cur->next;
         }
+```
+
+**25_K个一组翻转链表：**
+
+* 获取链表长度，计算整体反转次数。reverseCount = sizeList / k;
+* 虚拟头节点保存结果。
+* 三指针：`pre`、`cur`、`next`
+* 双循环：
+  * 控制整体反转次数：
+  * 控制k个元素的翻转：**每k个元素只需要翻转k-1次**，单次翻转后递减计数。
+  * 元素翻转后，位移、递减计数。
+
+* 返回结果
+
+**138_随机链表的复制**
+
+* 创建新节点，将新节点填充到原始节点之后。
+* 填充新节点的`random`，注意`random`可能为空。
+
+```c++
+while (nullptr != cur && nullptr != cur->next) {
+    if (nullptr != cur->random) {
+        cur->next->random = cur->random->next;
+    }
+    cur = cur->next->next;
+}
+```
+
+* 拆分：
+
+```cpp
+Node dummy(0);
+Node* nList = &dummy;
+cur = head;
+while (nullptr != cur && nullptr != cur->next) {
+    // 获取新节点
+    nList->next = cur->next;
+    // 断开
+    cur->next = cur->next->next;
+    
+    // 位移 
+    nList = nList->next;
+    cur = cur->next;
+}
 ```
 
