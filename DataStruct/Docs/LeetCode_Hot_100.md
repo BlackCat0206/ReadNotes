@@ -437,3 +437,173 @@ while (nullptr != cur && nullptr != cur->next) {
 }
 ```
 
+**146_LRU缓存：**
+
+* HashMap + 双向链表
+* 核心逻辑：
+  * `get(int key)`：若存在，则将节点存放置链表头。
+  * `push(int key, int value)`：若key存在，更新数据，若无则创建新节点，插入链表头部，同时插入至HashMap中。同时判断当前元素个数是否超出限制梳理，若有，获取末尾节点，移除链表中节点，根据节点中key移除hashmap中元素
+* HashMap：`unordered_map<int, Node*> m_unMap; // key: key, value : Node*`
+* 双向链表：
+
+```cpp
+typedef struct Node{
+    Node* pre;
+    NOde* next;
+    int key;
+    int value;
+    Node(int key, int value):pre(nullptr), next(nullptr), key(key),value(value){}
+}Node;
+```
+
+**23_合并K个有序链表**
+
+* **分治+迭代：自底向上合并链表**
+* 两两合并：`lists[0]`和`lists[1]`合并，合并后的链表保存在`lists[0]`中；把 `lists[2] `和 *lists*[3] 合并，合并后的链表保存在 `lists[2]` 中；依此类推。
+
+* 四四合并：把 `lists[0]` 和 `lists[2]` 合并（相当于合并前四条链表），合并后的链表保存在 `lists[0]` 中；把 `lists[4]` 和 `lists[6]` 合并，合并后的链表保存在 `lists[4]` 中；依此类推。
+* 八八合并：把 `lists[0]` 和~合并（相当于合并前八条链表），合并后的链表保存在 `lists[0]` 中；把 `lists[8]` 和 `lists[12]` 合并，合并后的链表保存在 `lists[8]` 中；依此类推。。
+
+* 链表合并逻辑：**21_合并两个有序链表**
+
+```cpp
+for (int step = 1; step < lists.size(); step *= 2) {
+    for (int i = 0; i < lists.size() - step; i += step*2) {
+        lists[0] = merageList(lists[i], lists[i + step]);
+    }
+}
+return lists[0];
+```
+
+### 2.9 链表
+
+**94_二叉树的中序遍历：**
+
+* 确认函数返回值和参数列表；
+* 确认终止条件；
+* 确认单次遍历的内容；
+
+**104_二叉树的最大深度**
+
+* 后续遍历
+
+* 确认函数返回值`int`和参数列表`TreeNode*`;
+* 确认终止条件：`if (nullptr == node) { return 0; }`
+* 确认单次遍历内容：获取左右子树的深度，取最大值+1.
+
+```cpp
+int leftDepth = traversal(node->left);
+int rightDepth = traversal(node->right);
+return max(leftDepth, rightDepth) + 1;
+```
+
+**226_翻转二叉树**
+
+* 前序遍历：
+
+* 确认函数返回值类型`TreeNode*`和参数列表`TreeNode* node`;
+* 确认终止条件`if (nullptr == node) { return node;}`
+* 确认单次遍历内容：交换左右子节点，递归处理新的左右子节点。
+
+```cpp
+swap(node->left, node->right);
+node->left = dfs(node->left);
+node->right = dfs(node->right);
+return node;
+```
+
+**101_对称二叉树**
+
+* 前序遍历
+
+* 确认函数返回值类型`bool`和参数列表`TreeNode* left, TreeNode* right`;
+* 确认终止条件：
+  * 节点为空：`true`
+  * 左空右不空：`false`
+  * 左不空右空：`false`
+  * 左右节点元素不相等`false`
+* 单次处理逻辑：两节点外侧比较，两节点内侧比较，返回结果。
+
+```cpp
+bool isOutSideSym = dfs(left->left, right->right);
+bool isInSideSym = dfs(left->right, right->left);
+return (isOutSideSym && isInSideSym);
+```
+
+**543_二叉树的直径**：
+
+* 后续遍历
+
+* 直径：**任意两节点的最长路径的长度**，不一定要经过根节点
+
+* 使用成员遍历记录，实时更新。
+* 返回值类型`int`参数类型`TreeNode*`;
+* 终止条件：遇到空节点，返回0。
+* 单次遍历执行内容：获取当前节点到到**左右节点的最大深度**。**更新最大直径**，返回**当前节点的最大深度**。
+
+```cpp
+int leftDiameter = dfs(node->left);
+int rightDiameter = dfs(node->right);
+maxDiameter = max(maxDiameter, leftDiameter + rightDiameter);
+
+return max(leftDiameter, rightDiameter) + 1;
+```
+
+**102_二叉树的层序遍历**
+
+* 使用`queue`，支持操作`push()`、`pop()`、`front()`。
+* 填充元素，逐层遍历。
+
+**108_将有序数组转化为二叉搜索树**
+
+* 前序遍历
+
+* 使用二分法，控制左右边界即可。
+
+**98_验证二叉搜索树：**
+
+* 中序遍历：
+* 返回值类型`bool`，参数类型`TreeNode*`;
+* 确认终止条件：空节点返回`true`；
+* 单次遍历的内容：获取左侧结果，若记录遍历的上一个元素不为空，且上一个元素>=当前元素，返回`false`。获取右侧结果，返回整合结果。
+
+```cpp
+bool isLeftBTS = isVaildBTS(node->left);
+if (nullptr != pre && pre->val >= node->val) {
+    return false;
+}
+pre = node;
+bool isRightBTS = isVaileBTS(node->right);
+return (isLeftBTS && isRightBTS);
+```
+
+**199_二叉树右视图**
+
+* 层序遍历，填充队列中最后一个元素。
+* 递归：中右左
+* 确认函数返回值`void`参数`TreeNode* node, int depth， vector<int>& ans`;
+* 确认终止条件：空节点返回`if (nullptr == node) {return;}`;
+* 单次执行逻辑：首次到达深度，填充元素。优先遍历右子树。
+
+```cpp
+if (depth == ans.size()) {
+    ans.push_bakc(node->val);
+}
+dfs(node->right, depth + 1, ans);
+dfs(node->left, depth + 1, ans);
+return;
+```
+
+**114_二叉树展开为链表**
+
+* 后续遍历：
+* 确认返回值类型`TreeNode*`和参数列表 `TreeNode*`
+
+* 终止条件：遇到空节点返回空指针
+* 单次遍历过程：
+  * 获取左子树尾节点
+  * 获取右子树尾节点
+  * 左子树尾节点指向右子树
+  * 当前节点的右节点指向左子树。
+  * 左节点制空。
+  * 优先返回右子树尾节点，左子树尾节点，当前节点。
