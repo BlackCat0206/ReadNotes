@@ -153,6 +153,9 @@ while (count == t.size()){
 * 如何计算前缀和：`preSum[i + 1] = preSum[i] + nums[i];`(保留一个0，用于计算单个元素满足条件的问题)。
 * 问题转换满足条件的次数`preSum[i] - preSum[i - x] == k` -> `preSum[i] - k == preSum[i - x]`。
 * 回归到两数之和的问题。`key`是前缀和，`value`是出现的次数。
+* **新解法：2026-01-30，基于437_路径总和III**
+* sum_map[0] = 1;
+* 再两数之和中直接计算前缀和，一次for循环。
 
 **53_最大子数组和：**
 
@@ -607,3 +610,53 @@ return;
   * 当前节点的右节点指向左子树。
   * 左节点制空。
   * 优先返回右子树尾节点，左子树尾节点，当前节点。
+
+```cpp
+TreeNode* leftTail = dfs(node->left);
+TreeNode* rightTail = dfs(node->right);
+
+if (nullptr != leftTail) {
+    leftTail->right = node->right;
+    node->right = node->left;
+    node->left = nullptr;
+}
+
+return (nullptr != rightTail) ? rightTail : (nullptr != leftTail) ? leftTail : node;
+```
+
+**105_从前序与中序遍历序列构造二叉树**
+
+* 使用区间：**左闭右开**，好处：右边不用取。
+
+* 方便计算中序左子树长度，使用`unordered_map<int, int> index`记录中序遍历的元素与对应长度。
+* 返回值类型`TreeNode* `参数列表：
+  * 前序遍历数组、前序开始位置、前序结束位置（开区间）
+  * 中序遍历数组、中序开始位置、中序结束位置（开区间）
+  * 中序元素与下标对应`unordered_map<int, int>&`
+* 终止条件：前闭后开区间，相等返回。
+* 单次遍历逻辑：
+  * 以**前缀的首元素**计算**左子树的中序数组对应长度**，创建左子树
+  * 基于上述计算，创建右子树
+  * 返回基于当前元素，左右子节点的新元素。
+
+**437_路径总和 III**
+
+解法：560_和为K的子数组相同，注意回溯掉当前节点影响。
+
+* 前序遍历
+
+* HashMap初始化`unordered_map<long long ,int> sum_map;sum_map[0] = 1;`
+* 返回值类型`void`参数列表`(TreeNode* node, int sum, int tragetsum, unordered_map<long long, int>& sum_map);`
+* 终止条件：空节点直接返回
+* 单次遍历逻辑：
+  * 计算前缀和
+  * 统计`preSUm - tragetSum`的次数
+  * 前缀和次数++
+  * 遍历左右子树
+  * **前缀和次数--**；
+
+**124_二叉树中的最大路径和**
+
+解法：543_二叉树的直径 演变
+
+* 对于结果的返回要考虑：所有元素为负数的情况，要使用0作为限制点。
