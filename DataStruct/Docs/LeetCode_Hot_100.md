@@ -663,7 +663,7 @@ return (nullptr != rightTail) ? rightTail : (nullptr != leftTail) ? leftTail : n
 
 * 对于结果的返回要考虑：所有元素为负数的情况，要使用**0作为限制点**。
 
-### 二分查找：
+### 2.10 二分查找：
 
 **35_搜索插入位置**：
 
@@ -730,4 +730,206 @@ return (nullptr != rightTail) ? rightTail : (nullptr != leftTail) ? leftTail : n
   while (l + 1 < r) {}
   ```
 
-  
+
+### 2.11 栈
+
+**20_有效括号**：
+
+* 用`unordered_map`进行快速搜索，用`stack`进行匹配。
+* 存储对应符号：` unordered_map<char, char> cmap = {{']','['}, {')','('},{'}','{'}};`
+* 向`stack`中填充`[、(、{`。
+* 使用`unordered_map`查看是否为右括号，若是右括号进行匹配（`stack`不为空，且当前元素与`st.top()`相同，`pop`）
+
+```cpp
+for (char c : s) {
+    if (cmap.count(c)) {
+        if (st.empty() || c != st.top()) {
+            return false;
+        }
+        st.pop();
+    } else {
+        st.push(c);
+    }
+}
+```
+
+**155_最小栈**：
+
+* 使用两个栈的成员变量，一个维护正常的栈元素，一个维护最小元素。
+* 初始化时给最小栈中添加一个`INT_MAX`元素。
+* `push`：最小栈比较当前元素和栈顶元素的最小值。
+
+**394_字符串解码**：
+
+* 迭代+递归：进入`[`之前，将之前整理好的字符串和统计次数存储在栈中。
+
+* 使用函数`isalpha()`和`isdigit()`判断字符是字母还是数字。
+
+  * 字符：向字符串中添加。
+  * 数字：统计重复次数。
+
+* 进入`[`：
+
+  * 通过`emplace`将字符串和重复子树填充至栈中：
+
+  ```cpp
+  st.emplace(move(ans), k);
+  ```
+
+  * k置0；
+
+* 出`]`：
+
+  * 获取栈中存储的内容`auto [pre_str, pre_k] = st.top()`
+  * 弹出内容：`st.pop();`
+  * 在之前的字符串中填充重复子串`while (pre_k--) {pre_str += ans;}`
+  * 将新的结果赋值`ans = move(pre_str);`
+
+* 核心：栈存储处理子串前的字符串和重复次数`stack<pair<string, k>> st;`
+
+**739_每日温度**：（单调栈：找下一个更高温度的天数，**本质是找最近更大元素**）
+
+* 单调栈：栈内存储的**元素下标**表示的**元素是单调递减**的。
+
+* 用栈作为`todoList`：填充每一个温度的下标，逐个遍历稳定，当`todoList`不为空且当前温度大于`todoList`存储下标代表的元素，获取对应下标，弹出，并计算对应下标结果。
+
+```cpp
+for (int i = 0; i < n; i++) {
+    int t = temperatures[i];
+    while (!todoList.empty() && t > temperatures[todoList.top()]) {
+        int j = todoList.top();
+        todoList.pop();
+        ans[j] = i - j;
+    }
+    todoList.push(i);
+}
+return ans;
+```
+
+**84_柱状图中最大的矩形**：（单调栈：找**左右最近更小的元素**）
+
+* **找到当前柱子左右第一个大于它的下标**
+
+* **单调栈**：**存储下标表示的元素的递增的**。
+  * **入栈**：当前元素 > 栈顶元素
+  * **出栈**：当前元素 < 栈顶元素
+* **大小计算**：`heights[i] * (right - left  - 1);`
+* **如何一次完成计算？**
+  * -1添加：栈和遍历数组都添加一个`-1`，
+    * 栈：表示左侧最近小于元素下标；
+    * 数组：遍历到最后用来清空栈的内容；
+  * **出栈思路**：找到**右侧小于等于元素下标**即可，相同的元素会有互补性。`heights=[1,3,4,3,2]`;
+  * 当`while (st.size() > 1 && h <= heights[st.top()]) {}`处理
+  * `st.top()`：表示元素的下标`i`；
+  * `r`表示：`i`右侧最近的小于等于`hegihts[i]`的元素的下标；
+  * `st.pop`之后，`st.top()`表示：`i`左侧小于`heights[i]`的元素的下标；
+
+```cpp
+stack<int> st;
+st.push(-1);
+heights.push_back(-1);
+int ans = 0;
+for (int r = 0; r < heights.size(); r++) {
+    int h = heights[r];
+    // 出栈
+    while (st.size() > 1 && h <= heights[st.top()]) {
+        int i = st.top();
+        st.pop();
+        int l = st.top();
+        ans = max(ans, heights[i] * (r - l + 1));
+    }
+    // 入栈
+    st.push(r);
+}
+return ans;
+```
+
+### 2.12 堆
+
+**215_数组中的第K个最大元素**：
+
+* 快排思路：实现部分递减逻辑。
+  * 终止条件：`left >= right`
+  * 找到基值：`int mid = left + (right - left) / 2; int baseValue = nums[mid];`
+  * 注意循环使用：`while (i <= r)`
+  * 核心逻辑：
+    * 比基值大，交换到左边，`l++; i++`;
+    * 比基值小，交换到右边：`r--`;
+    * 相同：`i++`;
+  * 结果：`l和r`均在基值的位置上。
+* 当基值的位置 < k - 1：第K元素在右边，继续快排：范围：[r + 1, right];
+* 当基质的位置 > k - 1：第K元素在左边，继续快排：范围：[left, l - 1];
+* 相等时，找到了，直接返回。
+
+```cpp
+void QuickSort(vector<int>& nums, int left, int right, int k) {
+    if (left >= right) {
+        return;
+    }
+    
+    int mid = left + (right - left) / 2;
+    int baseValue = nums[mid];
+    
+    int l = left;
+    int i = left;
+    int r = right;
+    while (i <= r) {
+        if (baseValue < nums[i]) {
+            swap(nusm[l], nums[i]);
+            l++;
+            i++;
+        } else if (baseValue > nums[i]) {
+            swap(nums[r], nums[i]);
+            r--;
+        } else {
+            i++;
+        }
+    }
+    // 结束后，l和r均在baseValue的位置
+    
+    if (l < k - 1) {
+ 		QuickSort(nums, r + 1, right, k);       
+    } else if (l > k - 1) {
+        QuickSort(nums, left, l - 1, k);
+    } 
+    return;
+}
+```
+
+**347_前K个高频元素**：
+
+* Hash+桶排序
+* Hash：统计元素对应出现频率，同时统计最大频率。
+* 桶：存放不通频率的元素
+* 答案：按照最大频率逐个将桶中元素插入值结果数组中。
+
+```cpp
+```
+
+**295_数据流的中位数**
+
+* 引入大小顶堆，大顶堆在左，小顶堆在右，奇数情况下左个数>右个数
+* 使用大顶堆完成排序，即在左堆为空或当前元素 <=左堆顶元素，填充进入左边，同时判断左右个数问题。
+* 反之相同
+
+```cpp
+priority_queue<int, vector<int>, less<int>> left;
+priority_queue<int, vector<int>, greater<int>> right;
+void push(int num) {
+    if (left.empty() || num <= left.top()) {
+        left.push(num);
+        if (right.size() + 1 != left.size()) {
+            right.push(left.top());
+            left.pop();
+        }
+    } else {
+        right.push(num);
+        if (right.size() > left,size()) {
+            left.push(right.top());
+            right.pop();
+        }
+    }
+    return;
+}
+```
+
