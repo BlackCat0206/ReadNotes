@@ -136,7 +136,7 @@ UART（*Universal Asynchronous Receiver/Transmitter*）：通用异步收发器
 * 等待上一个数据发送完成
 * 将数据填充发送寄存器
 
-接收函数：
+**接收函数**：
 
 * 等待数据数据接收完成
 * 返回数据
