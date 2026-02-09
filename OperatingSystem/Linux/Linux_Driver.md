@@ -175,7 +175,7 @@ cp -rf ./arch/arm/boot/dts/100ask_imx6ull-14x14.dtb ~/nfs_rootfs/
 make modules
 
 # 安装模块
-    sudo make ARCH=arm INSTALL_MOD_PATH=/home/book/nfs_rootfs modules_install
+sudo make ARCH=arm INSTALL_MOD_PATH=/home/book/nfs_rootfs modules_install
 ```
 
 ### 3.2 安装
@@ -194,7 +194,7 @@ cp  /mnt/*.dtb   /boot
 cp  /mnt/lib/modules  /lib  -rfd
 ```
 
-**动态加载**：****
+**动态加载**：
 
 * **安装驱动**：
 
@@ -339,6 +339,7 @@ DTS -> DTC -> DTB
       * 动态申请：`alloc_chrdev_region()`；
       * 静态申请：`register_chrdev_region()`；手动指定
     * **初始化私有数据**：分配驱动私有结构体`kzalloc`。
+    * **中断注册**：
     * **注册字符/块设备**：如果是字符设备通过`cdev_init`+`cdev_add`注册字符设备结构体`file_operations`关联到**设备节点**，块设备`bolck_operations`，网络设备`net_ops`。
     * **创建设备节点/类**：通过`class_create()`创建设备类、`device_create()`创建设备节点`/dev/xxx`，或用`sysfs_create_file()`创建`sysfs`节点。
 
@@ -386,7 +387,9 @@ obj-$(CONFIG_MY_STATIC_DRIVER) += board_100ask_imx6ull.o leddrv.o
 
 * `platform_driver_register()`
 
-* `__platform_driver_register(drv, THIS_MODULE)`，在这里填充了`plateform_driver`中`device_driver`的`bus_type* `的成员`&platform_bus_type`。
+* `__platform_driver_register(drv, THIS_MODULE)`，
+  * `bus_type* `的成员`&platform_bus_type`。
+  * `int (*probe) (struct device *dev);`的函数指针`platform_drv_probe`
 * `driver_register(&drv->driver)`;
 * `bus_add_driver(drv)`;
 * `driver_attach(drv);`
@@ -398,6 +401,7 @@ drv->bus->match ? drv->bus->match(dev, drv) : 1;
 ```
 
 * 执行`platform_bus_type`中`platform_match`：
+* `to_platform_device`中`container_of`通过**结构体成员变量的地址到推出整个结构体的地址**。
 
 ```c
 static int platform_match(struct device *dev, struct device_driver *drv)
@@ -427,8 +431,118 @@ static int platform_match(struct device *dev, struct device_driver *drv)
 }
 ```
 
+* 匹配成功后调用`driver_probe_device(drv, dev);`
+* `really_probe(dev, drv)`
+* `drv->probe(dev)`调用到`platform_drv_probe`调用到
 
-## 六、内核函数
+## 六、中断编写
+
+**注册**：
+
+```c
+/*
+* @brief 中断注册函数
+* @param [in] int irq 中断号
+* @param [in] irq_handler_t handler 中断处理函数
+* @param [in] flags 触发方式
+* @param [in] name 中断名称
+* @param [in] 中断函数传参
+*/
+request_irq(unsigned int irq, irq_handler_t handler, unsigned long flags,
+	    const char *name, void *dev);
+```
+
+**处理函数格式**：
+
+```c
+typedef irqreturn_t (*irq_handler_t)(int, void *);
+```
+
+## 七、应用和驱动交互
+
+**阻塞休眠唤醒**：
+
+```c
+// 等待中断 
+wait_event_interruptible(irq, bool);	// 若bool返回true，不阻塞
+// 唤醒中断
+wake_up_interruptible();
+```
+
+**poll**：轮询等待
+
+```c
+/* 应用层 */
+struct pollfd fds[1];
+fds[0].fd = fd;
+fds[0].events = POLLIN;
+
+int ret = poll(fds, 1, timeout_ms);
+if ((ret == 1) && (fds[0].revents & POLLIN))
+{
+    read(fd, &val, 4);
+    printf("get button : 0x%x\n", val);
+}
+
+/* 驱动层 */
+// fileoperations 实现poll
+static unsigned int gpio_key_drv_poll(struct file *fp, poll_table * wait)
+{
+	printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
+	poll_wait(fp, &gpio_key_wait, wait);
+	return is_key_buf_empty() ? 0 : POLLIN | POLLRDNORM;
+}
+
+```
+
+**异步通知：signal**
+
+```c
+/* 应用层 */
+// 异步回调函数
+static void sig_func(int sig)
+{
+	int val;
+	read(fd, &val, 4);
+	printf("get button : 0x%x\n", val);
+}
+// 1.获取进程ID
+fcntl(fd, F_SETOWN, getpid());
+// 2.开启FASYNC标志
+flags = fcntl(fd, F_GETFL);
+fcntl(fd, F_SETFL, flags | FASYNC);
+
+// 3.向内核注册信号
+signal(SIGIO, sig_func);
+
+/**** 驱动层 *****/
+// 保存fasync链表的指针
+static struct fasync_struct *dev_fasync;
+
+// 发送异步信号
+kill_fasync(&dev_fasync, SIGIO, POLL_IN);
+```
+
+## 八、按键消抖
+
+* 与FreeRTOS相同，在`probe`中初始化定时器，在中断函数中重置定时器。
+
+## 九、IIO
+
+IIO：Industrial I/O(工业 I/O)。Linux内核为**传感器/模拟量输入输出设备**（加速度计、陀螺仪、ADC/DAC、压力传感器）涉及的标准化驱动框架。
+
+**IIO方案**：基于内核IIO框架开发、内核会自动创建标准化`sysfs`节点（`sys/bus/iio/devices/iio:deviceX`），用户层通过标准化接口读写数据、配置参数、无需重复造轮子。
+
+**IIO驱动开发（对照字符设备）：**
+
+|           模块            |             字符设备驱动             |              IIO 驱动               |
+| :-----------------------: | :----------------------------------: | :---------------------------------: |
+|         设备注册          | `cdev_init/cdev_add`+`device_create` |        `iio_device_register`        |
+|         数据读写          |           自定义`read`函数           | 实现`iio_chan_spec`+`read_raw`回调  |
+| 参数配置（量程 / 采样率） |          自定义`ioctl`处理           | 实现`iio_dev_attr`+`write_raw`回调  |
+|        用户层访问         |           `/dev/icm20608`            | `/sys/bus/iio/devices/iio:deviceX/` |
+
+## X-1、内核函数
 
 **`module_init`作用：**
 
@@ -487,6 +601,11 @@ static inline int register_chrdev(unsigned int major, const char *name,
 | `vmalloc` | 分配的内存物理地址不保证是连续的          |
 | `vzalloc` | 分配的内存物理地址不保证是连续的，内容清0 |
 
+**`spin`自旋锁**：
+
+* `spin_lock_irqsave()`：上锁，不允许中断。
+* `spin_unlock_irqrestore()`：解锁
+
 ## X、问题：
 
 ### X.1 设备树如何初始化？
@@ -542,8 +661,8 @@ static inline int register_chrdev(unsigned int major, const char *name,
 
 * 阻塞式I/O：`wait_event_interrputible()`，`wake_up_interruptible()`
 * 轮询：`read`、`write`;
-* 多路IO复用：`poll`
-* 异步信号：`signal`
+* 多路IO复用：`poll`;
+* 异步信号：`signal`;
 * `ioctl()`：从内核中读取数据，或向内核中写入数据。
 
 ### X.6 设备和驱动的匹配方式：
@@ -552,3 +671,38 @@ static inline int register_chrdev(unsigned int major, const char *name,
 * 基于设备树的`compatible`进行匹配。
 * 基于`id_table`匹配。
 * 硬件名称和软件驱动名匹配。
+
+### X.7 为什么自旋锁不能休眠
+
+* 自旋锁禁止处理器抢占，不能临界区休眠延时等操作。
+
+### X.8 UART驱动
+
+* UART驱动，MCU厂家已完成，完成设备树配置`pinctrl`的引脚与`status`的使能就可以了。波特率等是应用层的工作。
+
+### X.9 GPS模块：
+
+9600波特率、1bit停止位、GNSS格式是NMEA0183格式。将二进制数据转换为统一标准格式。
+
+只分析GPGGA
+
+### X.10 编写中断服务程序我们需要注意什么？
+
+* 不能休眠；
+* 不能访问用户空间内存；
+* 不能耗时操作；
+* 不能被调度；
+* 函数声明必须是static，通常有特定返回类型。
+* 可重入性。
+* 把耗时的任务，延后处理：
+  * 严重耗时任务，放到队列（`workqueue`）中，队列就是**进程上下文**（可以休眠、阻塞、进程间切换，可以用spinlock，也可以用互斥体）。
+  * 一般耗时：放到`tasklet`（小任务），它是**中断上下文**。
+  * 不耗时：没有必要用下半部处理。
+
+### x.11 软中断和工作队列
+
+软中断和工作队列是Linux中断下半部处理机制。
+
+软中断（`tasklet`）：”可延迟函数“的总称，不能休眠、不能阻塞、不能进程间切换，**只能被硬件打断**，只能使用自旋锁。
+
+工作队列（`wordqueue`）：可以休眠、阻塞，进程间切换，可以使用互斥锁和自旋锁。
