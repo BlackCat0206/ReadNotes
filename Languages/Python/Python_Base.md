@@ -26,8 +26,6 @@
   fruits.remove(123)       # 删除指定元素
   ```
 
-  
-
 - **字典（Dict）**：类似 C++ 的 map，但更简洁（键值对，支持任意可哈希键）
 
   ```python
@@ -41,8 +39,6 @@
       print(f"{k}: {v}")
   ```
 
-  
-
 - **集合（Set）**：类似 C++ 的 unordered_set，去重、交并差集超方便
 
   ```python
@@ -52,7 +48,6 @@
   print(a | b)  # 并集：{1,2,3,4,5}
   ```
 
-  
 
 ##### 2. 函数：Python 的灵活特性（C/C++ 没有的）
 
@@ -65,8 +60,6 @@
   print(add(5, 3))  # 8
   ```
 
-  
-
 - **关键字参数**：传参更清晰，顺序无关
 
   ```python
@@ -75,8 +68,6 @@
   print_info(age=18, name='Tom')  # 关键字参数，顺序随意
   ```
 
-  
-
 - **lambda 匿名函数**：简化简单函数（C++ 的 lambda 更复杂）
 
   ```python
@@ -84,7 +75,6 @@
   print(add(2, 3))  # 5
   ```
 
-  
 
 ##### 3. 面向对象：Python 的简洁与魔法方法（基础）
 
@@ -124,8 +114,6 @@ print(dog)  # Dog(name=旺财, age=3)（触发__str__）
   even_nums = [x*2 for x in nums if x % 2 == 0]  # 筛选偶数并乘2
   print(even_nums)  # [4,8]
   ```
-
-  
 
 - **上下文管理器（with）**：替代 C/C++ 的 “打开 - 操作 - 手动关闭”
 
