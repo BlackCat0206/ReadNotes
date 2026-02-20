@@ -6,11 +6,11 @@
 
 **本地环境**：
 
-* CPU：AMD 9700X
-* Ramdom：32GB
-* GPU：Nvidia GeForce RTX 5070Ti 16GB
-* System：Windowns 11
-* IDE：VSCode
+* **CPU**：AMD 9700X
+* **Ramdom**：32GB
+* **GPU**：Nvidia GeForce RTX 5070Ti 16GB
+* **System**：Windows 11
+* **IDE**：VSCode
 
 ## 二、本地部署
 
@@ -40,7 +40,7 @@ ollama run deepseek-r1:7b-q4_0
 
 显存占用：**≈10GB**
 
-### 3. 验证是否用了显卡
+### 2.3. 验证是否用了显卡
 
 ```plaintext
 nvidia-smi
@@ -48,7 +48,7 @@ nvidia-smi
 
 能看到 `ollama` 占用显存 = **成功用 GPU 加速**。
 
-### 4. Ollama 命令集
+### 2.4. Ollama 命令集
 
 ```bash
 C:\Users\Admin>ollama help
