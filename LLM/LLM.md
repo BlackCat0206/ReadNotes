@@ -100,7 +100,6 @@ ollama list
 C:\Users\Admin>ollama list
 NAME                     ID              SIZE      MODIFIED
 deepseek-coder-v2:16b    63fb193b3a9b    8.9 GB    17 seconds ago
-qwen2.5-coder:14b        9ec8897f747e    9.0 GB    18 minutes ago
 deepseek-r1:14b          c333b7232bdb    9.0 GB    14 hours ago
 ```
 
