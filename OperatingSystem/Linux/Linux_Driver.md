@@ -324,7 +324,7 @@ DTS -> DTC -> DTB
     * **其他设备** ：`spi_driver`、`i2c_driver`；
   * **向内核注册驱动结构体**，触发**总线匹配机制**，实现**硬件设备与软件驱动的匹配**，匹配成功后回调用`probe()`函数：
     * **总线设备**：`platform_driver_register()`;
-    * **其他设备**：`spi_register_driver`、`宏：module_i2c_driver`;
+    * **其他设备**：`module_spi_driver`、`宏：module_i2c_driver`;
 
 * **二次注册**：`probe`
 
